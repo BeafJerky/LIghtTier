@@ -1,0 +1,227 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "enables the default permissions",
+  "platforms": ["windows", "macOS", "linux"],
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-minimize",
+    "core:window:allow-hide",
+    "core:window:allow-close",
+    "core:window:allow-set-focus",
+    "core:window:allow-is-visible",
+    "core:window:allow-show",
+    "core:window:allow-create",
+    "core:window:allow-set-position",
+    "core:window:allow-destroy",
+    "core:window:allow-title",
+    "core:window:allow-set-title",
+    "core:webview:allow-create-webview-window",
+    "core:webview:allow-set-webview-size",
+    "core:webview:allow-set-webview-position",
+    "core:webview:allow-create-webview",
+    "core:webview:allow-webview-show",
+    "core:webview:allow-webview-hide",
+    "core:webview:allow-webview-close",
+    "core:window:allow-set-skip-taskbar",
+    "window-state:default",
+    "window-state:allow-save-window-state",
+    "window-state:allow-restore-state",
+    "fs:default",
+    "fs:read-all",
+    "fs:read-files",
+    "fs:write-all",
+    "fs:write-files",
+    "fs:scope-log",
+    "fs:allow-exists",
+    "fs:allow-open",
+    "fs:allow-read-dir",
+    "fs:allow-resource-read",
+    "fs:allow-resource-read-recursive",
+    "fs:allow-resource-write",
+    "fs:allow-resource-write-recursive",
+    "fs:allow-app-read-recursive",
+    "log:default",
+    "log:allow-log",
+    "os:default",
+    "os:allow-hostname",
+    "core:tray:default",
+    "core:tray:allow-new",
+    "core:tray:allow-remove-by-id",
+    "core:tray:allow-set-icon",
+    "core:tray:allow-set-icon-as-template",
+    "core:tray:allow-set-menu",
+    "core:tray:allow-set-show-menu-on-left-click",
+    "core:tray:allow-set-title",
+    "core:tray:allow-set-tooltip",
+    "core:tray:allow-set-visible",
+    "core:window:allow-unminimize",
+    "core:window:allow-is-minimized",
+    "core:app:allow-default-window-icon",
+    "core:path:allow-is-absolute",
+    "notification:default",
+    "dialog:default",
+    "dialog:allow-open",
+    "shell:default",
+    "shell:allow-execute",
+    "shell:allow-kill",
+    "shell:allow-open",
+    "shell:allow-spawn",
+    "shell:allow-stdin-write",
+    {
+      "identifier": "fs:write-all",
+      "allow": [
+        {
+          "path": "**"
+        }
+      ]
+    },
+    {
+      "identifier": "fs:read-all",
+      "allow": [
+        {
+          "path": "**"
+        }
+      ]
+    },
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "args": true,
+          "cmd": "$RESOURCE/resource/nssm",
+          "name": "nssm"
+        },
+        {
+          "args": true,
+          "cmd": "$RESOURCE/resource/core/easytier-core",
+          "name": "easytier-core"
+        },
+        {
+          "args": true,
+          "cmd": "$RESOURCE/resource/core/easytier-cli",
+          "name": "easytier-cli"
+        },
+        {
+          "args": true,
+          "cmd": "cmd",
+          "name": "cmd"
+        },
+        {
+          "args": true,
+          "cmd": "powershell",
+          "name": "powershell"
+        },
+        {
+          "args": true,
+          "cmd": "nohup",
+          "name": "nohup"
+        },
+        {
+          "args": true,
+          "cmd": "runas",
+          "name": "runas"
+        },
+        {
+          "args": true,
+          "cmd": "sudo",
+          "name": "sudo"
+        },
+        {
+          "args": true,
+          "cmd": "netsh",
+          "name": "netsh"
+        },
+        {
+          "args": true,
+          "cmd": "taskkill",
+          "name": "taskkill"
+        },
+        {
+          "args": true,
+          "cmd": "killall",
+          "name": "killall"
+        },
+        {
+          "args": true,
+          "cmd": "kill",
+          "name": "kill"
+        },
+        {
+          "args": true,
+          "cmd": "wmic",
+          "name": "wmic"
+        },
+        {
+          "args": true,
+          "cmd": "ps",
+          "name": "ps"
+        },
+        {
+          "args": true,
+          "cmd": "route",
+          "name": "route"
+        },
+        {
+          "args": true,
+          "cmd": "mstsc",
+          "name": "mstsc"
+        }
+      ]
+    },
+    {
+      "identifier": "shell:allow-spawn",
+      "allow": [
+        {
+          "args": true,
+          "cmd": "$RESOURCE/resource/core/easytier-core",
+          "name": "easytier-core"
+        },
+        {
+          "args": true,
+          "cmd": "$RESOURCE/resource/core/easytier-cli",
+          "name": "easytier-cli"
+        },
+        {
+          "args": true,
+          "cmd": "cmd",
+          "name": "cmd"
+        },
+        {
+          "args": true,
+          "cmd": "powershell",
+          "name": "powershell"
+        },
+        {
+          "args": true,
+          "cmd": "runas",
+          "name": "runas"
+        },
+        {
+          "args": true,
+          "cmd": "sudo",
+          "name": "sudo"
+        },
+        {
+          "args": true,
+          "cmd": "nohup",
+          "name": "nohup"
+        },
+        {
+          "args": true,
+          "cmd": "mstsc",
+          "name": "mstsc"
+        }
+      ]
+    },
+    {
+      "identifier": "http:default",
+      "allow": [
+        {
+          "url": "https://**"
+        }
+      ]
+    }
+  ]
+}

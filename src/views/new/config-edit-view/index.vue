@@ -1,0 +1,102 @@
+<template>
+  <div class="nce-page">
+    <EditDialog
+      v-model="visible"
+      :config-name="configName"
+      :toml-content="tomlContent"
+      :dialog-mode="dialogMode"
+      :existing-config-names="configNameList"
+      inline
+      @saved="handleSaved"
+    />
+  </div>
+</template>
+
+<script setup lang="ts">
+/**
+ * config-edit-view — 配置编辑/新增二级页面（Android 专属入口，等价于桌面端的编辑弹窗）
+ *
+ * 包装 EditDialog 的 inline 模式：进入页面时按路由参数（name）加载 TOML，
+ * 关闭面板统一 goBack 回退（保存成功/取消均走同一出口），保持移动端返回语义一致。
+ */
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+import EditDialog from '@/views/new/config-view/EditDialog.vue'
+import { useEasyTierStore } from '@/store/modules/easytier'
+import { useMockData } from '@/hooks/useMockData'
+import { useCreamToast } from '@/hooks/useCreamToast'
+import { CONFIG_PATH } from '@/constants/easytier'
+
+defineOptions({ name: 'NewConfigEditView' })
+
+const route = useRoute()
+const router = useRouter()
+const { t } = useI18n()
+const easyTierStore = useEasyTierStore()
+const { readFileContent, writeFileContent } = useMockData()
+const { show: toast } = useCreamToast()
+
+// 页面模式在挂载时捕获：路由回退后，在途异步流程（保存 toast）仍使用正确模式
+const dialogMode: 'add' | 'edit' = route.name === 'NewConfigAddView' ? 'add' : 'edit'
+
+const configName = ref('')
+const tomlContent = ref('')
+const visible = ref(false)
+// 配置名列表（新增模式查重，与列表页弹窗入口一致）
+const configNameList = computed(() => easyTierStore.configList.map((c) => c.configFileName))
+
+// 返回列表页；无历史记录（直达）时回退到配置列表路由
+const goBack = () => {
+  if (window.history.state?.back) router.back()
+  else router.push('/new/config')
+}
+
+onMounted(async () => {
+  if (dialogMode === 'add') {
+    // 与列表页新增入口一致的初始模板
+    tomlContent.value =
+      'hostname = ""\ninstance_name = ""\ndhcp = true\nrpc_portal = "0.0.0.0:15888"\n'
+  } else {
+    if (!easyTierStore.configListLoaded) await easyTierStore.loadConfigFiles()
+    const name = String(route.query.name || '')
+    const item = easyTierStore.configList.find((c) => c.configFileName === name)
+    if (!item?.fileName) {
+      goBack()
+      return
+    }
+    try {
+      tomlContent.value = (await readFileContent(`${CONFIG_PATH}/${item.fileName}`)) as string
+      configName.value = name
+    } catch {
+      toast(t('newConfig.readFail'), 'error')
+      goBack()
+      return
+    }
+  }
+  // 先关后开：触发 EditDialog 内部 watch(modelValue) 的打开初始化
+  visible.value = true
+})
+
+// 面板请求关闭（取消按钮/保存后自动关闭）→ 统一回退入口
+watch(visible, (v) => {
+  if (!v) goBack()
+})
+
+// 保存回调：写盘后按模式提示成功/失败（移动端由本页直接完成落盘）
+const handleSaved = async (name: string, content: string) => {
+  try {
+    await writeFileContent(`${CONFIG_PATH}/${name}.toml`, content)
+    toast(dialogMode === 'add' ? t('newCommon.addSuccess') : t('newCommon.saveSuccess'), 'success')
+    await easyTierStore.loadConfigFiles()
+  } catch {
+    toast(dialogMode === 'add' ? t('newCommon.addFail') : t('newCommon.saveFail'), 'error')
+  }
+}
+</script>
+
+<style scoped>
+.nce-page {
+  height: 100%;
+}
+</style>

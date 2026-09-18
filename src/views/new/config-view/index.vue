@@ -1,0 +1,1755 @@
+<template>
+  <div class="nw-root" :class="{ 'nw-detail-open': !!selectedDetail }">
+    <!-- 左侧配置列表 -->
+    <div class="nw-left">
+      <div class="nw-left-header">
+        <div class="nw-left-label">✦ {{ t('newConfig.configList') }}</div>
+        <div class="nw-left-btns">
+          <button class="nw-add-btn" @click="openAdd" :title="t('newConfig.addConfig')">+</button>
+        </div>
+      </div>
+      <div class="nw-left-scroll" v-loading="easyTierStore.configListLoading">
+        <div
+          v-for="item in easyTierStore.configList"
+          :key="item.configFileName"
+          class="nw-card"
+          :class="{ active: selectedConfig?.configFileName === item.configFileName }"
+          @click="selectConfig(item)"
+        >
+          <div class="nw-card-top">
+            <div class="nw-card-status">
+              <span class="nw-dot" :class="getRunning(item) ? 'on' : 'off'"></span>
+              <span class="nw-status-text">{{
+                getRunning(item) ? t('newCommon.running') : t('newCommon.stopped')
+              }}</span>
+            </div>
+            <span v-if="getRunningItem(item)?.pid" class="nw-card-pid"
+              >PID {{ getRunningItem(item)?.pid }}</span
+            >
+            <span v-else-if="getRunningItem(item)?.virtualIp" class="nw-card-pid"
+              >IP {{ getRunningItem(item)?.virtualIp }}</span
+            >
+          </div>
+          <div class="nw-card-name">{{ item.configFileName }}</div>
+          <div class="nw-card-sub">{{ item.fileName }}</div>
+          <div class="nw-card-actions" @click.stop>
+            <button
+              class="nw-btn nw-btn-run"
+              :disabled="getRunning(item)"
+              @click="startAction(item)"
+              >{{ t('newCommon.run') }}</button
+            >
+            <button
+              class="nw-btn nw-btn-stop"
+              :disabled="!getRunning(item)"
+              @click="stopAction(item)"
+              >{{ t('newCommon.close') }}</button
+            >
+          </div>
+        </div>
+        <div
+          v-if="easyTierStore.configList.length === 0 && !easyTierStore.configListLoading"
+          class="nw-empty-cards"
+        >
+          <span class="nw-empty-icon">✦</span>
+          <p>{{ t('newCommon.noConfig') }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右侧详情面板：宽屏常驻；窄屏为 master-detail 的详情态（列表隐藏） -->
+    <div class="nw-right" v-if="selectedDetail">
+      <div class="nw-detail-header">
+        <div class="nw-detail-title-row">
+          <button class="nw-back-btn" @click="closeDetail">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+            {{ t('newCommon.back') }}
+          </button>
+          <h3 class="nw-detail-title">{{ selectedConfig?.configFileName }}</h3>
+          <span class="nw-badge" :class="selectedRunning ? 'on' : 'off'">
+            {{ selectedRunning ? '● ' + t('newCommon.running') : '○ ' + t('newCommon.stopped') }}
+          </span>
+        </div>
+        <div class="nw-detail-actions">
+          <button class="nw-btn-lg nw-btn-edit" @click="openEdit">{{ t('newCommon.edit') }}</button>
+          <button
+            class="nw-btn-lg nw-btn-start"
+            :disabled="selectedRunning"
+            @click="selectedConfig && startAction(selectedConfig)"
+            >{{ t('newCommon.run') }}</button
+          >
+          <button
+            class="nw-btn-lg nw-btn-kill"
+            :disabled="!selectedRunning"
+            @click="selectedConfig && stopAction(selectedConfig)"
+            >{{ t('newCommon.close') }}</button
+          >
+          <button class="nw-btn-lg nw-btn-del" @click="deleteSelectedConfig">{{
+            t('newCommon.delete')
+          }}</button>
+        </div>
+      </div>
+
+      <div class="nw-section"
+        ><div class="nw-section-title">{{ t('newConfig.mainParams') }}</div>
+        <div class="nw-grid">
+          <div class="nw-field"
+            ><span class="nw-label">{{ t('newConfig.hostname') }}</span
+            ><span class="nw-val">{{ selectedDetail.hostname || '—' }}</span></div
+          >
+          <div class="nw-field"
+            ><span class="nw-label">{{ t('newConfig.instanceName') }}</span
+            ><span class="nw-val">{{ selectedDetail.instance_name || '—' }}</span></div
+          >
+          <div class="nw-field"
+            ><span class="nw-label">{{ t('newConfig.networkName') }}</span
+            ><span class="nw-val">{{
+              selectedDetail.network_identity?.network_name || '—'
+            }}</span></div
+          >
+          <div class="nw-field"
+            ><span class="nw-label">DHCP</span
+            ><span class="nw-val">{{
+              selectedDetail.dhcp ? t('newConfig.dhcpEnabled') : t('newConfig.dhcpDisabled')
+            }}</span></div
+          >
+          <div class="nw-field"
+            ><span class="nw-label">{{ t('newConfig.rpcPortal') }}</span
+            ><span class="nw-val">{{ selectedDetail.rpc_portal || '—' }}</span></div
+          >
+          <div class="nw-field"
+            ><span class="nw-label">{{ t('newCommon.version') }}</span
+            ><span class="nw-val">{{ (selectedDetail as any)?.version || '—' }}</span></div
+          >
+        </div>
+      </div>
+
+      <div class="nw-section"
+        ><div class="nw-section-title">{{ t('newConfig.networkConn') }}</div>
+        <div class="nw-grid">
+          <div class="nw-field-full"
+            ><span class="nw-label">{{ t('newConfig.listenAddr') }}</span>
+            <div class="nw-tags" v-if="selectedDetail.listeners?.length">
+              <span class="nw-tag" v-for="l in selectedDetail.listeners" :key="l">{{
+                l
+              }}</span> </div
+            ><span class="nw-val" v-else>—</span>
+          </div>
+          <div class="nw-field-full"
+            ><span class="nw-label">{{ t('newConfig.peerNodes') }}</span>
+            <div class="nw-tags" v-if="selectedDetail.peer?.length">
+              <span class="nw-tag" v-for="p in selectedDetail.peer" :key="p.uri">{{
+                p.uri
+              }}</span> </div
+            ><span class="nw-val" v-else>—</span>
+          </div>
+          <div class="nw-field-full"
+            ><span class="nw-label">{{ t('newConfig.exitNodes') }}</span>
+            <div class="nw-tags" v-if="selectedDetail.exit_nodes?.length">
+              <span class="nw-tag nw-tag-exit" v-for="e in selectedDetail.exit_nodes" :key="e">{{
+                e
+              }}</span> </div
+            ><span class="nw-val" v-else>—</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="nw-section"
+        ><div class="nw-section-title">{{ t('newConfig.routes') }}</div>
+        <div class="nw-grid"
+          ><div class="nw-field-full">
+            <template v-if="selectedDetail.routes?.length">
+              <input
+                v-model="routeFilter"
+                class="nw-route-filter"
+                :placeholder="t('newConfig.routeFilterPlaceholder')"
+              />
+              <div v-if="filteredRoutes.length" class="nw-route-grid">
+                <div class="nw-route-card" v-for="r in filteredRoutes" :key="r">
+                  <span class="nw-route-target">{{ r }}</span>
+                  <span class="nw-route-gw">{{ t('newConfig.routeGwStatic') }}</span>
+                </div>
+              </div>
+              <span v-else class="nw-route-empty">{{ t('newConfig.noRoutes') }}</span>
+            </template>
+            <span class="nw-val" v-else>—</span>
+          </div></div
+        >
+      </div>
+
+      <div class="nw-section" v-if="selectedDetail.flags"
+        ><div class="nw-section-title">Flags</div>
+        <div class="nw-grid">
+          <div class="nw-field" v-for="(val, key) in selectedDetail.flags" :key="key">
+            <span class="nw-label">{{ key }}</span>
+            <span class="nw-val">{{
+              typeof val === 'boolean' ? (val ? '✓' : '✗') : val || '—'
+            }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5.9：退出节点路由（配置级开关，仅 Tauri 桌面端） -->
+      <div class="nw-section"
+        ><div class="nw-section-title">{{ t('newConfig.exitRoute') }}</div>
+        <div class="nw-svc-bar">
+          <div class="nw-svc-status">
+            <span
+              class="nw-svc-dot"
+              :class="{
+                'svc-running': exitRouteStatus === 'enabled',
+                'svc-stopped': exitRouteStatus === 'disabled',
+                'svc-uninstalled': exitRouteStatus === 'desktop'
+              }"
+            ></span>
+            <span class="nw-svc-text">{{ exitRouteStatusText }}</span>
+          </div>
+          <div class="nw-svc-actions">
+            <template v-if="isTauri">
+              <button
+                class="nw-btn-sm nw-btn-svc-start"
+                :disabled="exitRouteFlag || isExitRouteBusy"
+                @click="toggleExitRoute"
+                >{{ t('newConfig.exitRouteEnable') }}</button
+              >
+              <button
+                class="nw-btn-sm nw-btn-svc-stop"
+                :disabled="!exitRouteFlag || isExitRouteBusy"
+                @click="toggleExitRoute"
+                >{{ t('newConfig.exitRouteDisable') }}</button
+              >
+              <button
+                class="nw-btn-sm nw-btn-svc-stop"
+                :disabled="isExitRouteBusy"
+                @click="openRouteCheck"
+                >{{ t('newConfig.exitRouteCheck') }}</button
+              >
+            </template>
+          </div>
+        </div>
+        <p class="nw-svc-desc">{{ t('newConfig.exitRouteDesc') }}</p>
+      </div>
+
+      <!-- 日志（5.3：内联日志查看器，工具栏含刷新/自动滚动/打开目录） -->
+      <div class="nw-section"
+        ><div class="nw-section-title">{{ t('newConfig.logs') }}</div>
+        <LogViewer :config-name="selectedConfig?.configFileName || ''" />
+      </div>
+
+      <!-- 服务管理（Windows 服务专属；Android 隐藏） -->
+      <div v-if="!isAndroidPlatform" class="nw-section"
+        ><div class="nw-section-title">{{ t('newConfig.serviceMgmt') }}</div>
+        <div class="nw-svc-bar">
+          <div class="nw-svc-status">
+            <span
+              class="nw-svc-dot"
+              :class="{
+                'svc-running': currentServiceStatus === 'running',
+                'svc-stopped': currentServiceStatus === 'stopped',
+                'svc-uninstalled': currentServiceStatus === 'notInstalled',
+                'svc-checking': !currentServiceStatus
+              }"
+            ></span>
+            <span class="nw-svc-text">{{
+              currentServiceStatus
+                ? mapServiceStatus(currentServiceStatus)
+                : t('newCommon.checking')
+            }}</span>
+          </div>
+          <div class="nw-svc-actions">
+            <template v-if="currentServiceStatus === 'notInstalled'">
+              <button class="nw-btn-lg nw-btn-svc-install" @click="openServiceDialog">{{
+                t('newConfig.installService')
+              }}</button>
+            </template>
+            <template v-else>
+              <button
+                class="nw-btn-sm nw-btn-svc-start"
+                :disabled="currentServiceStatus === 'running'"
+                @click="handleStartService"
+                >{{ t('newCommon.start') }}</button
+              >
+              <button
+                class="nw-btn-sm nw-btn-svc-stop"
+                :disabled="currentServiceStatus !== 'running'"
+                @click="handleStopService"
+                >{{ t('newCommon.stop') }}</button
+              >
+              <button class="nw-btn-sm nw-btn-svc-uninstall" @click="handleUninstallService">{{
+                t('newConfig.uninstall')
+              }}</button>
+            </template>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nw-right" v-else>
+      <div class="nw-empty"
+        ><span class="nw-empty-icon">✦</span><p>{{ t('newConfig.selectConfig') }}</p></div
+      >
+    </div>
+  </div>
+  <!-- 配置编辑弹窗：仅桌面端；Android 进入独立编辑页面（config-edit-view） -->
+  <EditDialog
+    v-if="!isAndroidPlatform"
+    v-model="editVisible"
+    :config-name="editConfigName"
+    :toml-content="editTomlContent"
+    :dialog-mode="editDialogMode"
+    :existing-config-names="configNameList"
+    @saved="handleSaved"
+  />
+  <ServiceDialog
+    v-if="!isAndroidPlatform"
+    v-model="svcDialogVisible"
+    :config-name="svcConfigName"
+    @installed="handleServiceInstalled"
+  />
+  <!-- 自定义确认弹窗（替代原生 confirm） -->
+  <CreamDialog v-model="cfmVisible" :title="cfmTitle" width="400px">
+    <p class="cfm-msg">{{ cfmMessage }}</p>
+    <template #footer>
+      <div class="cfm-footer">
+        <button class="nw-btn-cfm nw-btn-cfm-cancel" @click="resolveConfirm(false)">{{
+          t('newCommon.cancel')
+        }}</button>
+        <button class="nw-btn-cfm nw-btn-cfm-ok" @click="resolveConfirm(true)">{{
+          t('newCommon.confirm')
+        }}</button>
+      </div>
+    </template>
+  </CreamDialog>
+</template>
+
+<script setup lang="ts">
+/**
+ * config-view — 配置管理主页面（配置列表 + 详情面板，master-detail 布局）
+ *
+ * 核心流程：加载配置列表 → 选中卡片解析 TOML 详情 → 启动/停止内核实例 →
+ * 退出节点路由开关（桌面专属，flags._enable_exit_route 驱动）与 Windows 服务管理。
+ * 平台差异：
+ * - 桌面：编辑/新增走弹窗（EditDialog / ServiceDialog），宽屏左右分栏并默认选中上次运行配置；
+ * - Android：编辑/新增跳二级路由页面，窄屏列表与详情互斥展示，内核在应用进程内运行
+ *   （无 pid），同一时刻仅一个实例，启动前二次确认“停旧起新”；
+ * - Windows 服务面板与退出节点路由仅非 Android 环境展示；详情读取失败时回退内置演示数据。
+ */
+import { CONFIG_PATH } from '@/constants/easytier'
+import { useEasyTierStore } from '@/store/modules/easytier'
+import * as toml from 'smol-toml'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useCreamToast } from '@/hooks/useCreamToast'
+import { useMockData } from '@/hooks/useMockData'
+import * as coreApi from '@/utils/coreApi'
+import { isAndroid } from '@/utils/platformUtil'
+import CreamDialog from '@/components/CreamDialog/index.vue'
+import EditDialog from './EditDialog.vue'
+import ServiceDialog from './ServiceDialog.vue'
+import LogViewer from '@/components/LogViewer/index.vue'
+import { useAutoMetric } from '@/hooks/useAutoMetric'
+import {
+  setExitRoute,
+  clearExitRoute,
+  checkExitRouteResidue,
+  cleanExitRouteResidue
+} from '@/utils/routeUtil'
+import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
+
+defineOptions({ name: 'NewConfigView' })
+
+// ===== 状态定义 =====
+const easyTierStore = useEasyTierStore()
+// Android 平台：无 Windows 服务/系统路由工具，内核进程内运行（无 pid）
+const isAndroidPlatform = isAndroid()
+// 启动进行中标志：避免连点造成重复启动/路由重复下发
+const isStarting = ref(false)
+// 当前选中配置（列表卡片数据）与其 TOML 解析后的详情
+const selectedConfig = ref<RunningItem | null>(null)
+const selectedDetail = ref<EasyTierConfig | null>(null)
+
+const { show: toast } = useCreamToast()
+// 自动跃点：启动前记录网卡状态、停止后恢复（配合退出节点路由避免默认路由缺失）
+const { beforeStart: autoMetricBeforeStart, afterStop: autoMetricAfterStop } = useAutoMetric()
+// 文件/服务操作统一从 useMockData 获取：Tauri 环境走真实实现，浏览器 Mock 环境自动降级
+const {
+  readFileContent,
+  writeFileContent,
+  deleteFileOrDir,
+  checkService,
+  installService,
+  uninstallService,
+  startService,
+  stopService
+} = useMockData()
+const { t } = useI18n()
+const router = useRouter()
+
+// 将 useMockData 返回的原始状态 key 映射为国际化字符串
+const mapServiceStatus = (key: string): string => {
+  switch (key) {
+    case 'running':
+      return t('newCommon.running')
+    case 'stopped':
+      return t('newConfig.stoppedStatus')
+    case 'stopping':
+      return t('newConfig.stoppedStatus') + '...'
+    case 'notInstalled':
+      return t('newConfig.notInstalled')
+    case 'unknown':
+      return t('newSettings.unknown')
+    default:
+      return key
+  }
+}
+
+// ===== 配置编辑弹窗（仅桌面端；Android 走独立路由页面） =====
+const editVisible = ref(false)
+const editConfigName = ref('')
+const editTomlContent = ref('')
+const editDialogMode = ref<'add' | 'edit'>('edit')
+
+// 服务管理
+const svcDialogVisible = ref(false)
+const svcConfigName = ref('')
+const serviceStatusMap = ref<Map<string, string>>(new Map())
+const currentServiceStatus = computed(() => {
+  if (!selectedConfig.value) return ''
+  return serviceStatusMap.value.get(selectedConfig.value.configFileName) || 'notInstalled'
+})
+
+// 自定义确认弹窗（替代原生 confirm）
+const cfmVisible = ref(false)
+const cfmTitle = ref('')
+const cfmMessage = ref('')
+let cfmResolve: ((val: boolean) => void) | null = null
+const showConfirm = (title: string, message: string): Promise<boolean> => {
+  cfmTitle.value = title
+  cfmMessage.value = message
+  cfmVisible.value = true
+  return new Promise<boolean>((resolve) => {
+    cfmResolve = resolve
+  })
+}
+const resolveConfirm = (val: boolean) => {
+  cfmVisible.value = false
+  cfmResolve?.(val)
+  cfmResolve = null
+}
+// 防止通过遮罩层/ESC/关闭按钮关闭弹窗时 Promise 永不 resolve
+watch(cfmVisible, (v) => {
+  if (!v && cfmResolve) {
+    cfmResolve(false)
+    cfmResolve = null
+  }
+})
+
+// 配置名列表（用于新增时查重）
+const configNameList = computed(() => easyTierStore.configList.map((c) => c.configFileName))
+
+// ===== 列表与详情加载 =====
+const getRunning = (item: RunningItem) =>
+  easyTierStore.runningList.some((i) => i.configFileName === item.configFileName)
+const getRunningItem = (item: RunningItem) =>
+  easyTierStore.runningList.find((i) => i.configFileName === item.configFileName)
+const selectedRunning = computed(() =>
+  selectedConfig.value ? getRunning(selectedConfig.value) : false
+)
+
+// 运行时状态刷新（FAB 已负责文件加载）
+const refreshRuntimeState = async () => {
+  await updateRunningList()
+  // 窄屏（移动端）默认展示清单，不自动进入详情，由用户点卡片跳转
+  if (window.innerWidth > 900 && easyTierStore.configList.length > 0) {
+    const last = easyTierStore.getLastRunConfigName()
+    const target = last
+      ? easyTierStore.configList.find((c) => c.configFileName === last)
+      : easyTierStore.configList[0]
+    if (target) await selectConfig(target)
+  }
+  // 加载服务状态
+  for (const c of easyTierStore.configList) {
+    loadServiceStatus(c.configFileName)
+  }
+}
+
+// 选中配置卡片：加载详情、重置路由筛选，并记录选择（供下次进入页面恢复）
+const selectConfig = async (item: RunningItem) => {
+  selectedConfig.value = item
+  routeFilter.value = ''
+  await loadConfigDetail(item)
+  easyTierStore.setLastSelectedConfig(item)
+}
+
+// 移动端 master-detail：从详情返回清单
+const closeDetail = () => {
+  selectedConfig.value = null
+  selectedDetail.value = null
+}
+
+// 读取并解析配置 TOML；无文件名（Mock 环境）或读取失败时回退内置演示数据
+const loadConfigDetail = async (item: RunningItem) => {
+  if (!item.fileName) {
+    selectedDetail.value = getDemoConfig(item.configFileName)
+    return
+  }
+  try {
+    const content = (await readFileContent(`${CONFIG_PATH}/${item.fileName}`)) as string
+    if (content) selectedDetail.value = toml.parse(content) as unknown as EasyTierConfig
+  } catch {
+    selectedDetail.value = getDemoConfig(item.configFileName)
+  }
+}
+
+// 5.2：路由筛选（本期仅 TOML 静态筛选；运行时 route 信息待 CLI 输出含 routes 列验证后追加）
+const routeFilter = ref('')
+const filteredRoutes = computed(() => {
+  const routes = selectedDetail.value?.routes || []
+  const kw = routeFilter.value.trim().toLowerCase()
+  return kw ? routes.filter((r) => String(r).toLowerCase().includes(kw)) : routes
+})
+
+// 从内核拉取运行实例列表（pid / 虚拟 IP），浏览器环境静默忽略
+const updateRunningList = async () => {
+  try {
+    const names = easyTierStore.configList.map((c) => c.configFileName)
+    const newList = await coreApi.getRunningList(names)
+    easyTierStore.setRunningList(newList)
+  } catch {
+    /* non-Tauri */
+  }
+}
+
+// ===== 启动 / 停止 =====
+const startAction = async (item: RunningItem) => {
+  if (!item.fileName || isStarting.value) return
+  isStarting.value = true
+  try {
+    // Android 单实例模型：已有其他配置运行时，二次确认后停旧起新
+    if (isAndroidPlatform) {
+      const current = easyTierStore.runningList.find(
+        (r) => r.configFileName !== item.configFileName
+      )
+      if (current) {
+        const confirmed = window.confirm(
+          t('newOverview.androidSwitchConfirm', {
+            current: current.configFileName,
+            next: item.configFileName
+          })
+        )
+        if (!confirmed) return
+        const stopped = await coreApi.stopConfig(current)
+        if (!stopped) {
+          toast(t('newCommon.stoppedFail'), 'error')
+          return
+        }
+        easyTierStore.removeRunningList(current.configFileName)
+      }
+    }
+    await autoMetricBeforeStart(item.fileName)
+    await coreApi.startConfig(item.fileName)
+    easyTierStore.setStopLoop(false)
+    easyTierStore.setP2pNotify(true)
+    easyTierStore.setLastRunConfigName(item)
+    await updateRunningList()
+    toast(t('newCommon.startSuccess'), 'success')
+    // 5.9：若配置启用退出路由标记，启动成功后自动配置路由（仅桌面）
+    if (isTauri) await applyExitRouteAfterStart(item)
+  } catch (e: any) {
+    await autoMetricAfterStop()
+    // 展示内核真实错误，便于定位（invoke 拒绝值可能是字符串或 Error）
+    const detail = typeof e === 'string' ? e : e?.message
+    const base = isAndroidPlatform
+      ? t('newOverview.startFailAndroid')
+      : t('newOverview.startFailCore')
+    toast(detail ? `${base}（${detail}）` : base, 'error', 6000)
+  } finally {
+    isStarting.value = false
+  }
+}
+
+// 停止内核实例：Android 停 VPN+内核，桌面结束子进程；随后恢复跃点并清除退出节点路由
+const stopAction = async (item: RunningItem) => {
+  const running = getRunningItem(item)
+  // Android：停 VPN + 内核实例（无 pid）；桌面：结束子进程
+  if (isAndroidPlatform || running?.pid) {
+    const ok = await coreApi.stopConfig(running ?? item)
+    if (ok) {
+      easyTierStore.setStopLoop(true)
+      easyTierStore.removeRunningList(item.configFileName)
+      toast(t('newCommon.stoppedSuccess'), 'success')
+    } else {
+      toast(t('newCommon.stoppedFail'), 'error')
+    }
+  } else easyTierStore.removeRunningList(item.configFileName)
+  await autoMetricAfterStop()
+  // 5.9：停止后自动清除退出节点路由（不残留）
+  if (isTauri) {
+    const ok = await clearExitRoute()
+    if (ok) toast(t('newConfig.exitRouteAutoCleared'), 'success')
+  }
+}
+
+// 内置演示配置：浏览器 Mock 环境或读取失败时展示，保证界面完整可用（按名称匹配，缺省回退首个）
+function getDemoConfig(name: string): EasyTierConfig {
+  const demos: Record<string, any> = {
+    东京中继节点: {
+      hostname: 'tokyo-relay-01',
+      instance_name: '东京中继',
+      rpc_portal: '127.0.0.1:15888',
+      dhcp: true,
+      network_identity: { network_name: 'global-mesh', network_secret: '••••' },
+      listeners: ['tcp://0.0.0.0:11000', 'udp://0.0.0.0:11000'],
+      peer: [{ uri: 'tcp://public-node-1:11000' }, { uri: 'udp://public-node-2:11000' }],
+      exit_nodes: [],
+      routes: ['10.0.0.0/8', '172.16.0.0/12'],
+      flags: { default_protocol: 'tcp', mtu: 1380, latency_first: true }
+    },
+    新加坡出口: {
+      hostname: 'sg-exit-01',
+      instance_name: '新加坡出口',
+      rpc_portal: '127.0.0.1:15888',
+      dhcp: true,
+      network_identity: { network_name: 'global-mesh', network_secret: '••••' },
+      listeners: ['tcp://0.0.0.0:11001'],
+      peer: [{ uri: 'tcp://public-node-1:11000' }],
+      exit_nodes: ['0.0.0.0/0'],
+      routes: [],
+      flags: { default_protocol: 'tcp', mtu: 1380, enable_exit_node: true }
+    },
+    家庭局域网: {
+      hostname: 'home-router',
+      instance_name: '家庭网络',
+      rpc_portal: '127.0.0.1:15888',
+      dhcp: true,
+      network_identity: { network_name: 'home-mesh', network_secret: '••••' },
+      listeners: [],
+      peer: [{ uri: 'tcp://tokyo-relay:11000' }],
+      exit_nodes: [],
+      routes: ['192.168.1.0/24'],
+      flags: { default_protocol: 'tcp', mtu: 1380, latency_first: true }
+    },
+    办公室组网: {
+      hostname: 'office-gw',
+      instance_name: '办公室网关',
+      rpc_portal: '127.0.0.1:15888',
+      dhcp: true,
+      network_identity: { network_name: 'office-mesh', network_secret: '••••' },
+      listeners: ['tcp://0.0.0.0:11002'],
+      peer: [{ uri: 'tcp://tokyo-relay:11000' }],
+      exit_nodes: [],
+      routes: ['10.10.0.0/16'],
+      flags: { default_protocol: 'tcp', mtu: 1380, latency_first: true }
+    },
+    移动设备: {
+      hostname: 'mobile-01',
+      instance_name: '手机',
+      rpc_portal: '127.0.0.1:15888',
+      dhcp: true,
+      network_identity: { network_name: 'home-mesh', network_secret: '••••' },
+      listeners: [],
+      peer: [{ uri: 'tcp://home-router:11000' }],
+      exit_nodes: [],
+      routes: [],
+      flags: { default_protocol: 'tcp', latency_first: true, no_tun: true }
+    }
+  }
+  return (demos[name] || demos['东京中继节点']) as EasyTierConfig
+}
+
+// ===== 生命周期 =====
+onMounted(() => {
+  // 如果 store 尚未加载，先加载
+  if (!easyTierStore.configListLoaded) {
+    easyTierStore.loadConfigFiles()
+  }
+  // 注册到全局刷新回调：托盘/任务栏等外部动作触发时同步刷新本页
+  easyTierStore.registerPageRefresh(refreshRuntimeState)
+  refreshRuntimeState()
+})
+
+onUnmounted(() => {
+  easyTierStore.clearPageRefresh()
+})
+
+// ===== 配置增删改 =====
+const openEdit = async () => {
+  if (!selectedConfig.value?.fileName) return
+  // Android：进入独立编辑页面（移动端不使用弹窗）
+  if (isAndroidPlatform) {
+    router.push({ name: 'NewConfigEditView', query: { name: selectedConfig.value.configFileName } })
+    return
+  }
+  try {
+    const raw = (await readFileContent(`${CONFIG_PATH}/${selectedConfig.value.fileName}`)) as string
+    editConfigName.value = selectedConfig.value.configFileName
+    editTomlContent.value = raw
+    editVisible.value = true
+  } catch {
+    toast(t('newConfig.readFail'), 'error')
+  }
+}
+
+// 编辑/新增弹窗保存回调：写入 TOML 后刷新列表与运行状态
+const handleSaved = async (name: string, content: string) => {
+  try {
+    await writeFileContent(`${CONFIG_PATH}/${name}.toml`, content)
+    toast(
+      editDialogMode.value === 'add' ? t('newCommon.addSuccess') : t('newCommon.saveSuccess'),
+      'success'
+    )
+    await easyTierStore.loadConfigFiles()
+    await refreshRuntimeState()
+  } catch {
+    toast(
+      editDialogMode.value === 'add' ? t('newCommon.addFail') : t('newCommon.saveFail'),
+      'error'
+    )
+  }
+}
+
+// 新增配置
+const openAdd = () => {
+  // Android：进入独立新增页面（移动端不使用弹窗）
+  if (isAndroidPlatform) {
+    router.push({ name: 'NewConfigAddView' })
+    return
+  }
+  editDialogMode.value = 'add'
+  editConfigName.value = ''
+  editTomlContent.value =
+    'hostname = ""\ninstance_name = ""\ndhcp = true\nrpc_portal = "0.0.0.0:15888"\n'
+  editVisible.value = true
+}
+
+// 删除配置
+const deleteSelectedConfig = async () => {
+  if (!selectedConfig.value) return
+  const ok = await showConfirm(
+    t('newConfig.deleteTitle'),
+    t('newConfig.deleteMsg', { name: selectedConfig.value.configFileName })
+  )
+  if (!ok) return
+  try {
+    // 5.10：删除配置前若启用了出口路由，先清除系统路由（防残留）
+    if (isTauri && exitRouteFlag.value) {
+      await clearExitRoute()
+    }
+    await deleteFileOrDir(`${CONFIG_PATH}/${selectedConfig.value.fileName}`)
+    toast(t('newCommon.deleteSuccess'), 'success')
+    selectedConfig.value = null
+    selectedDetail.value = null
+    await easyTierStore.loadConfigFiles()
+    await refreshRuntimeState()
+  } catch {
+    toast(t('newCommon.deleteFail'), 'error')
+  }
+}
+
+// ===== 退出节点路由开关（5.9 / 5.10，仅 Tauri 桌面端） =====
+// 判定依据：Tauri 运行时且非 Android（Android 无 route 命令/PowerShell，视为非适用环境）
+const isTauri =
+  typeof window !== 'undefined' && (window as any).__TAURI__ !== undefined && !isAndroidPlatform
+const isExitRouteBusy = ref(false)
+
+// 开关状态：优先 flags._enable_exit_route，缺失时降级读旧顶层字段 config_exit_nodes_route
+const exitRouteFlag = computed(() => {
+  const cfg = selectedDetail.value as any
+  if (!cfg) return false
+  const f = cfg.flags
+  if (f && '_enable_exit_route' in f) return f._enable_exit_route === true
+  return cfg.config_exit_nodes_route === true
+})
+
+const exitRouteStatus = computed<'enabled' | 'disabled' | 'desktop'>(() => {
+  if (!isTauri) return 'desktop'
+  return exitRouteFlag.value ? 'enabled' : 'disabled'
+})
+const exitRouteStatusText = computed(() => {
+  if (exitRouteStatus.value === 'enabled') return t('newConfig.exitRouteEnabled')
+  if (exitRouteStatus.value === 'desktop') return t('newConfig.exitRouteOnlyDesktop')
+  return t('newConfig.exitRouteDisabled')
+})
+
+// 持久化开关标记到配置 TOML 的 flags（统一写 flags._enable_exit_route）
+const persistExitRouteFlag = async (enabled: boolean): Promise<boolean> => {
+  const item = selectedConfig.value
+  if (!item?.fileName) return false
+  try {
+    const raw = (await readFileContent(`${CONFIG_PATH}/${item.fileName}`)) as string
+    const cfg = toml.parse(raw) as any
+    if (!cfg.flags || typeof cfg.flags !== 'object') cfg.flags = {}
+    if (enabled) cfg.flags._enable_exit_route = true
+    else delete cfg.flags._enable_exit_route
+    await writeFileContent(`${CONFIG_PATH}/${item.fileName}`, toml.stringify(cfg))
+    // 同步内存视图，避免开关状态与文件不一致
+    const detail = selectedDetail.value as any
+    if (detail) {
+      if (!detail.flags || typeof detail.flags !== 'object') detail.flags = {}
+      if (enabled) detail.flags._enable_exit_route = true
+      else delete detail.flags._enable_exit_route
+    }
+    return true
+  } catch {
+    return false
+  }
+}
+
+const toggleExitRoute = async () => {
+  if (!selectedConfig.value || !selectedDetail.value || isExitRouteBusy.value) return
+  isExitRouteBusy.value = true
+  try {
+    if (exitRouteFlag.value) {
+      // 停用：删除路由 + 移除标记
+      const ok = await clearExitRoute()
+      if (ok) {
+        await persistExitRouteFlag(false)
+        toast(t('newConfig.exitRouteCleared'), 'success')
+      } else {
+        toast(t('newConfig.exitRouteFail'), 'error')
+      }
+    } else {
+      // 启用：添加路由 + 写入标记
+      const res = await setExitRoute(
+        selectedDetail.value as any,
+        selectedConfig.value.configFileName
+      )
+      if (res.ok) {
+        await persistExitRouteFlag(true)
+        toast(t('newConfig.exitRouteSuccess'), 'success')
+      } else if (res.reason === 'no-exit') {
+        toast(t('newConfig.exitRouteNoExit'), 'warning')
+      } else if (res.reason === 'precondition') {
+        toast(t('newConfig.exitRoutePrecondition'), 'warning', 4000)
+      } else if (res.reason === 'non-tauri') {
+        toast(t('newConfig.exitRouteOnlyDesktop'), 'warning')
+      } else {
+        toast(
+          t('newConfig.exitRouteFail') + '：' + t('newConfig.exitRouteAdminHint'),
+          'error',
+          4000
+        )
+      }
+    }
+  } finally {
+    isExitRouteBusy.value = false
+  }
+}
+
+// 5.10：残留检查（对比持久化记录与系统路由表，可确认清理）
+const openRouteCheck = async () => {
+  if (isExitRouteBusy.value) return
+  isExitRouteBusy.value = true
+  try {
+    const res = await checkExitRouteResidue()
+    const fmt = (r: { target: string; mask: string; gateway: string; metric: number }) =>
+      `${r.target} mask ${r.mask} → ${r.gateway} (metric ${r.metric})`
+    const parts: string[] = []
+    if (res.active.length > 0) {
+      parts.push(
+        t('newConfig.exitRouteCheckActive', { n: res.active.length }) +
+          '\n' +
+          res.active.map(fmt).join('\n')
+      )
+    }
+    if (res.missing.length > 0) {
+      parts.push(
+        t('newConfig.exitRouteCheckMissing', { n: res.missing.length }) +
+          '\n' +
+          res.missing.map(fmt).join('\n')
+      )
+    }
+    if (res.suspicious.length > 0) {
+      parts.push(
+        t('newConfig.exitRouteCheckSuspicious', { n: res.suspicious.length }) +
+          '\n' +
+          res.suspicious.map(fmt).join('\n')
+      )
+    }
+    if (parts.length === 0) {
+      toast(t('newConfig.exitRouteCheckNone'), 'success')
+      return
+    }
+    const clearable = res.active.length > 0
+    const confirmMsg =
+      parts.join('\n\n') +
+      (clearable
+        ? '\n\n' + t('newConfig.exitRouteCheckConfirmClear', { n: res.active.length })
+        : '')
+    const ok = await showConfirm(t('newConfig.exitRouteCheckTitle'), confirmMsg)
+    if (!ok || !clearable) return
+    const clean = await cleanExitRouteResidue(true)
+    if (clean.failed > 0) {
+      toast(t('newConfig.exitRouteResidueFail'), 'error')
+    } else if (clean.cleared > 0) {
+      toast(t('newConfig.exitRouteResidueCleared', { n: clean.cleared }), 'success')
+    }
+  } finally {
+    isExitRouteBusy.value = false
+  }
+}
+
+// 从文件读取配置并判断是否启用退出路由标记（启动时可能不是当前选中项）
+const isExitRouteEnabledInFile = (cfg: any): boolean => {
+  const f = cfg?.flags
+  if (f && '_enable_exit_route' in f) return f._enable_exit_route === true
+  return cfg?.config_exit_nodes_route === true
+}
+
+// 启动成功后自动配置退出节点路由（仅当配置文件中启用了标记；可能不是当前选中项）
+const applyExitRouteAfterStart = async (item: RunningItem) => {
+  try {
+    const raw = (await readFileContent(`${CONFIG_PATH}/${item.fileName}`)) as string
+    const cfg = toml.parse(raw) as any
+    if (!isExitRouteEnabledInFile(cfg)) return
+    const res = await setExitRoute(cfg, item.configFileName)
+    if (res.ok) toast(t('newConfig.exitRouteAutoApplied'), 'success')
+    else if (res.reason === 'precondition')
+      toast(t('newConfig.exitRoutePrecondition'), 'warning', 4000)
+    else if (res.reason === 'no-exit') toast(t('newConfig.exitRouteNoExit'), 'warning')
+    else toast(t('newConfig.exitRouteFail'), 'error', 3000)
+  } catch {
+    /* 读取失败时静默跳过自动路由 */
+  }
+}
+
+// 服务管理
+const loadServiceStatus = async (configFileName: string) => {
+  // Windows 服务专属能力；Android 无此模型（服务面板整体隐藏）
+  if (isAndroidPlatform) return
+  try {
+    const status = await checkService(configFileName)
+    serviceStatusMap.value.set(configFileName, status)
+  } catch {
+    serviceStatusMap.value.set(configFileName, 'notInstalled')
+  }
+}
+
+// 打开服务安装弹窗（选择 nssm / 官方服务等安装方式）
+const openServiceDialog = () => {
+  if (!selectedConfig.value) return
+  svcConfigName.value = selectedConfig.value.configFileName
+  svcDialogVisible.value = true
+}
+
+// 服务安装完成回调：安装后刷新该配置的服务状态
+const handleServiceInstalled = async (configName: string, options: any) => {
+  try {
+    const ok = await installService(configName, options)
+    if (ok) {
+      toast(t('newConfig.svcInstallSuccess'), 'success')
+    } else {
+      toast(t('newConfig.svcInstallFail'), 'error')
+    }
+    await loadServiceStatus(configName)
+  } catch {
+    toast(t('newConfig.svcInstallFail'), 'error')
+  }
+}
+
+// 启动 Windows 服务
+const handleStartService = async () => {
+  if (!selectedConfig.value) return
+  try {
+    const ok = await startService(selectedConfig.value.configFileName)
+    toast(
+      ok ? t('newConfig.svcStartSuccess') : t('newConfig.svcStartFail'),
+      ok ? 'success' : 'error'
+    )
+    await loadServiceStatus(selectedConfig.value.configFileName)
+  } catch {
+    toast(t('newConfig.svcStartFail'), 'error')
+  }
+}
+
+// 停止 Windows 服务（停止后提示内核已断开）
+const handleStopService = async () => {
+  if (!selectedConfig.value) return
+  try {
+    const ok = await stopService(selectedConfig.value.configFileName)
+    toast(ok ? t('newConfig.svcStopSuccess') : t('newConfig.svcStopFail'), ok ? 'success' : 'error')
+    toast(t('newConfig.svcStopHint'), 'success', 3000)
+    await loadServiceStatus(selectedConfig.value.configFileName)
+  } catch {
+    toast(t('newConfig.svcStopFail'), 'error')
+  }
+}
+
+// 卸载 Windows 服务（二次确认后执行）
+const handleUninstallService = async () => {
+  if (!selectedConfig.value) return
+  const ok = await showConfirm(
+    t('newConfig.uninstallTitle'),
+    t('newConfig.uninstallMsg', { name: selectedConfig.value.configFileName })
+  )
+  if (!ok) return
+  try {
+    const result = await uninstallService(selectedConfig.value.configFileName)
+    toast(
+      result ? t('newConfig.svcUninstallSuccess') : t('newConfig.svcUninstallFail'),
+      result ? 'success' : 'error'
+    )
+    await loadServiceStatus(selectedConfig.value.configFileName)
+  } catch {
+    toast(t('newConfig.svcUninstallFail'), 'error')
+  }
+}
+</script>
+
+<style scoped>
+.nw-root {
+  display: flex;
+  gap: 16px;
+  height: 100%;
+  min-height: 0;
+  font-family: var(--theme-font-body);
+}
+
+.nw-left {
+  display: flex;
+  width: 240px;
+  min-height: 0;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nw-left-label {
+  padding: 0 4px;
+  font-family: var(--theme-font-display);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 2px;
+  color: var(--theme-text-muted);
+  text-transform: uppercase;
+}
+
+.nw-left-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+
+.nw-left-btns {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.nw-add-btn {
+  display: flex;
+  width: 24px;
+  height: 24px;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--theme-text-muted);
+  cursor: pointer;
+  background: var(--theme-bg-card);
+  border: 1.5px solid var(--theme-border);
+  border-radius: var(--theme-radius-round);
+  transition: all 0.2s;
+  align-items: center;
+  justify-content: center;
+}
+
+.nw-add-btn:hover {
+  color: var(--theme-accent-primary);
+  background: var(--theme-bg-hover);
+  border-color: var(--theme-accent-primary);
+}
+
+.nw-left-scroll {
+  display: flex;
+  min-height: 0;
+  padding: 12px;
+  overflow-y: auto;
+  background: var(--theme-bg-tag);
+  border-radius: var(--theme-radius-md);
+  flex: 1;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.nw-card {
+  padding: 14px 16px;
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--theme-bg-card);
+  border: 1.5px solid var(--theme-border);
+  border-radius: var(--theme-radius-xl);
+  transition: all 0.3s var(--theme-ease-spring);
+  flex-shrink: 0;
+}
+
+.nw-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--theme-shadow-sm);
+}
+
+.nw-card.active {
+  border-color: var(--theme-accent-primary);
+  box-shadow: 0 0 0 2px var(--theme-bg-active);
+}
+
+.nw-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.nw-card-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.nw-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--theme-radius-round);
+}
+
+.nw-dot.on {
+  background: var(--theme-color-success);
+}
+
+.nw-dot.off {
+  background: var(--theme-text-muted);
+}
+
+.nw-status-text {
+  font-size: 11px;
+  color: var(--theme-text-muted);
+}
+
+.nw-card-pid {
+  font-size: 10px;
+  color: var(--theme-text-muted);
+}
+
+.nw-card-name {
+  margin-bottom: 2px;
+  font-family: var(--theme-font-display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--theme-text-primary);
+}
+
+.nw-card-sub {
+  margin-bottom: 10px;
+  font-size: 11px;
+  color: var(--theme-text-muted);
+}
+
+.nw-card-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.nw-btn {
+  padding: 4px 16px;
+  font-family: var(--theme-font-body);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  border-radius: var(--theme-radius-pill);
+  transition: all 0.25s;
+}
+
+.nw-btn-run {
+  color: var(--theme-text-white);
+  background: var(--theme-color-success);
+}
+
+.nw-btn-run:hover:not(:disabled) {
+  transform: scale(1.04);
+}
+
+.nw-btn-stop {
+  color: var(--theme-accent-primary);
+  background: var(--theme-bg-hover);
+}
+
+.nw-btn-stop:hover:not(:disabled) {
+  background: var(--theme-bg-active);
+}
+
+.nw-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.3;
+  transform: none !important;
+}
+
+.nw-right {
+  min-height: 0;
+  padding: 20px 22px;
+  overflow-y: auto;
+  background: var(--theme-bg-card);
+  border: 1.5px solid var(--theme-border);
+  border-radius: var(--theme-radius-xl);
+  flex: 1;
+}
+
+/* 移动端适配：master-detail 互斥，列表与详情单独展示 */
+@media (width <= 900px) {
+  .nw-root {
+    flex-direction: column;
+  }
+
+  .nw-left {
+    width: 100%;
+    flex: 1;
+  }
+
+  /* 选中详情后隐藏列表，仅展示详情 */
+  .nw-detail-open .nw-left {
+    display: none;
+  }
+
+  /* 清单态隐藏空占位面板 */
+  .nw-root:not(.nw-detail-open) .nw-right {
+    display: none;
+  }
+
+  .nw-right {
+    flex: 1;
+    padding: 14px 16px;
+  }
+
+  /* 提高特异性，覆盖基础 display:none，确保窄屏详情态返回按钮可见 */
+  .nw-detail-open .nw-back-btn {
+    display: flex;
+  }
+
+  /* 详情头部允许换行，避免标题与按钮组互挤导致标题竖排/按钮溢出 */
+  .nw-detail-header {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .nw-detail-title-row {
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+
+  .nw-detail-title {
+    overflow-wrap: break-word;
+  }
+
+  .nw-detail-actions {
+    flex-wrap: wrap;
+  }
+}
+
+/* 手机尺寸：字段网格降为单列，避免长值被挤成两行 */
+@media (width <= 480px) {
+  .nw-root .nw-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 移动端返回按钮（默认隐藏，仅窄屏在详情头部展示） */
+.nw-back-btn {
+  display: none;
+  padding: 5px 12px;
+  font-family: var(--theme-font-body);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--theme-text-secondary);
+  white-space: nowrap;
+  cursor: pointer;
+  background: var(--theme-bg-hover);
+  border: 1px solid var(--theme-border);
+  border-radius: var(--theme-radius-pill);
+  transition: all 0.2s;
+  align-items: center;
+  gap: 6px;
+}
+
+.nw-back-btn:hover {
+  color: var(--theme-text-primary);
+  background: var(--theme-bg-active);
+}
+
+.nw-detail-header {
+  display: flex;
+  padding-bottom: 14px;
+  margin-bottom: 16px;
+  border-bottom: 2px solid var(--theme-border-light);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nw-detail-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nw-detail-title {
+  margin: 0;
+  font-family: var(--theme-font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--theme-text-primary);
+}
+
+.nw-badge {
+  padding: 2px 12px;
+  font-family: var(--theme-font-body);
+  font-size: 10px;
+  border-radius: var(--theme-radius-pill);
+}
+
+.nw-badge.on {
+  color: var(--theme-color-success-dark);
+  background: color-mix(in srgb, var(--theme-color-success) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--theme-color-success) 18%, transparent);
+}
+
+.nw-badge.off {
+  color: var(--theme-text-muted);
+  background: color-mix(in srgb, var(--theme-text-muted) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--theme-text-muted) 18%, transparent);
+}
+
+.nw-detail-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.nw-btn-lg {
+  padding: 6px 20px;
+  font-family: var(--theme-font-body);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  border-radius: var(--theme-radius-pill);
+  transition: all 0.25s;
+}
+
+.nw-btn-start {
+  color: var(--theme-text-white);
+  background: var(--theme-color-success);
+}
+
+.nw-btn-start:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.nw-btn-edit {
+  color: var(--theme-text-primary);
+  background: var(--theme-bg-hover);
+  border: 1.5px solid var(--theme-border);
+}
+
+.nw-btn-edit:hover:not(:disabled) {
+  color: var(--theme-accent-primary);
+  border-color: var(--theme-accent-primary);
+}
+
+.nw-btn-kill {
+  color: var(--theme-accent-primary);
+  background: var(--theme-bg-hover);
+}
+
+.nw-btn-kill:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.nw-btn-del {
+  color: var(--theme-accent-primary);
+  background: var(--theme-bg-hover);
+  border: 1.5px solid color-mix(in srgb, var(--theme-accent-primary) 30%, transparent);
+}
+
+.nw-btn-del:hover:not(:disabled) {
+  color: var(--theme-accent-primary);
+  border-color: var(--theme-accent-primary);
+  transform: translateY(-1px);
+}
+
+.nw-btn-lg:disabled {
+  cursor: not-allowed;
+  opacity: 0.3;
+  transform: none !important;
+}
+
+.nw-section {
+  margin-bottom: 16px;
+}
+
+.nw-section-title {
+  display: flex;
+  margin-bottom: 10px;
+  font-family: var(--theme-font-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--theme-accent-primary);
+  align-items: center;
+  gap: 8px;
+}
+
+.nw-section-title::after {
+  height: 2px;
+  background: linear-gradient(90deg, var(--theme-border-light), transparent);
+  content: '';
+  flex: 1;
+}
+
+.nw-grid {
+  display: grid;
+  overflow: hidden;
+  background: var(--theme-border-light);
+  border: 1.5px solid var(--theme-border-light);
+  border-radius: var(--theme-radius-md);
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1px;
+}
+
+.nw-field {
+  display: flex;
+  padding: 10px 14px;
+  background: var(--theme-bg-card);
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nw-field-full {
+  display: flex;
+  padding: 10px 14px;
+  background: var(--theme-bg-card);
+  flex-direction: column;
+  gap: 2px;
+  grid-column: 1 / -1;
+}
+
+.nw-label {
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 1.2px;
+  color: var(--theme-text-muted);
+  text-transform: uppercase;
+}
+
+.nw-val {
+  font-size: 13px;
+  color: var(--theme-text-primary);
+  word-break: break-all;
+}
+
+.nw-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 2px 0;
+}
+
+.nw-tag {
+  padding: 2px 10px;
+  font-size: 11px;
+  color: var(--theme-text-secondary);
+  background: var(--theme-bg-tag);
+  border: 1px solid var(--theme-border);
+  border-radius: var(--theme-radius-pill);
+}
+
+.nw-route-filter {
+  width: 100%;
+  padding: 6px 14px;
+  font-family: var(--theme-font-body);
+  font-size: 12px;
+  color: var(--theme-text-primary);
+  background: var(--theme-bg-tag);
+  border: 1.5px solid var(--theme-border);
+  border-radius: var(--theme-radius-pill);
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.nw-route-filter:focus {
+  border-color: var(--theme-accent-primary);
+}
+
+.nw-route-filter::placeholder {
+  color: var(--theme-text-muted);
+}
+
+.nw-route-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.nw-route-card {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 12px;
+  background: var(--theme-bg);
+  border: 1.5px solid var(--theme-border-light);
+  border-radius: var(--theme-radius-md);
+}
+
+.nw-route-target {
+  font-family: var(--theme-font-display);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--theme-text-primary);
+  word-break: break-all;
+}
+
+.nw-route-gw {
+  font-size: 10px;
+  color: var(--theme-text-muted);
+}
+
+.nw-route-empty {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--theme-text-muted);
+}
+
+.nw-tag-exit {
+  color: var(--theme-accent-primary);
+  background: color-mix(in srgb, var(--theme-accent-primary) 4%, transparent);
+  border-color: color-mix(in srgb, var(--theme-accent-primary) 20%, transparent);
+}
+
+.nw-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 8px;
+  opacity: 0.5;
+}
+
+.nw-empty-icon {
+  font-size: 40px;
+  color: var(--theme-color-scrollbar);
+}
+
+.nw-empty p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--theme-text-muted);
+}
+
+.nw-empty-cards {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 0;
+  gap: 8px;
+  color: var(--theme-text-muted);
+}
+
+.nw-empty-cards p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.nw-svc-bar {
+  display: flex;
+  padding: 12px 16px;
+  background: var(--theme-bg-tag);
+  border: 1.5px solid var(--theme-border-light);
+  border-radius: var(--theme-radius-md);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nw-svc-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nw-svc-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--theme-radius-round);
+}
+
+.nw-svc-dot.svc-running {
+  background: var(--theme-color-success);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--theme-color-success) 40%, transparent);
+}
+
+.nw-svc-dot.svc-stopped {
+  background: var(--theme-text-muted);
+}
+
+.nw-svc-dot.svc-uninstalled {
+  background: var(--theme-border);
+}
+
+.nw-svc-dot.svc-checking {
+  background: var(--theme-border);
+  animation: nw-pulse 1s infinite;
+}
+
+@keyframes nw-pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+.nw-svc-text {
+  font-size: 13px;
+  color: var(--theme-text-primary);
+}
+
+.nw-svc-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.nw-svc-desc {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--theme-text-muted);
+}
+
+.nw-svc-desktop-only {
+  font-size: 12px;
+  color: var(--theme-text-muted);
+}
+
+.nw-btn-sm {
+  padding: 4px 14px;
+  font-family: var(--theme-font-body);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  border-radius: var(--theme-radius-pill);
+  transition: all 0.2s;
+}
+
+.nw-btn-svc-install {
+  padding: 6px 18px;
+  font-family: var(--theme-font-body);
+  font-size: 12px;
+  font-weight: 500;
+  color: #fff;
+  cursor: pointer;
+  background: var(--theme-accent-primary);
+  border: none;
+  border-radius: var(--theme-radius-pill);
+  transition: all 0.2s;
+}
+
+.nw-btn-svc-install:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.nw-btn-svc-start {
+  color: var(--theme-text-white);
+  background: var(--theme-color-success);
+}
+
+.nw-btn-svc-start:hover:not(:disabled) {
+  transform: scale(1.04);
+}
+
+.nw-btn-svc-stop {
+  color: var(--theme-accent-primary);
+  background: var(--theme-bg-hover);
+}
+
+.nw-btn-svc-stop:hover:not(:disabled) {
+  background: var(--theme-bg-active);
+}
+
+.nw-btn-svc-uninstall {
+  color: var(--theme-text-muted);
+  background: var(--theme-bg-hover);
+  border: 1px solid var(--theme-border);
+}
+
+.nw-btn-svc-uninstall:hover:not(:disabled) {
+  color: var(--theme-accent-primary);
+  border-color: var(--theme-accent-primary);
+}
+
+.nw-btn-sm:disabled,
+.nw-btn-svc-install:disabled {
+  cursor: not-allowed;
+  opacity: 0.3;
+  transform: none !important;
+}
+
+.cfm-msg {
+  max-height: 260px;
+  padding: 4px 0 0;
+  overflow-y: auto;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--theme-text-secondary);
+  white-space: pre-line;
+}
+
+.cfm-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.nw-btn-cfm {
+  padding: 7px 20px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  border: none;
+  border-radius: var(--theme-radius-sm, 6px);
+  transition: all 0.18s ease;
+}
+
+.nw-btn-cfm-cancel {
+  color: var(--theme-text-secondary);
+  background: var(--theme-bg-hover);
+}
+
+.nw-btn-cfm-cancel:hover {
+  background: var(--theme-bg-active);
+}
+
+.nw-btn-cfm-ok {
+  color: var(--theme-text-white, #fff);
+  background: var(--theme-accent-primary);
+}
+
+.nw-btn-cfm-ok:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+</style>

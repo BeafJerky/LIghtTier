@@ -1,0 +1,174 @@
+:root {
+  /* ===== 背景色 ===== */
+  --theme-bg: #fdf8f4;
+  --theme-bg-card: #ffffff;
+  --theme-bg-sidebar: linear-gradient(180deg, #faf5f0, #f5efe8);
+  --theme-bg-toolbar: #ffffff;
+  --theme-bg-hover: rgba(232, 160, 160, 0.06);
+  --theme-bg-active: rgba(232, 160, 160, 0.1);
+  --theme-bg-tag: #f5ede6;
+
+  /* ===== 文字色 ===== */
+  --theme-text-primary: #4a3728;
+  --theme-text-secondary: #7a6e5e;
+  --theme-text-muted: #c8bdb2;
+  --theme-text-white: #ffffff;
+
+  /* ===== 点缀色 ===== */
+  --theme-accent-primary: #e8a0a0;
+  --theme-accent-secondary: #b8a9c9;
+  --theme-accent-hover: #d49090;
+  --theme-color-success: #7fba8a;
+  --theme-color-success-dark: #6aaa78;
+  --theme-color-danger: #e8a0a0;
+  --theme-color-warning: #e6a23c;
+  --theme-color-info: #e8a0a0;
+
+  /* ===== 表面色（弹窗/卡片内部） ===== */
+  --theme-surface-secondary: #f5ede6;
+  --theme-surface-hover: #efe5d9;
+  --theme-text-on-accent: #ffffff;
+
+  /* ===== 边框 ===== */
+  --theme-border: #ede4db;
+  --theme-border-light: #f5ede6;
+  --theme-color-scrollbar: #e8d5c4;
+
+  /* ===== 阴影 ===== */
+  --theme-shadow-sm: 0 8px 28px rgba(74, 55, 40, 0.06);
+  --theme-shadow-md: 0 12px 36px rgba(74, 55, 40, 0.07);
+  --theme-shadow-toast: 0 6px 24px rgba(74, 55, 40, 0.1);
+
+  /* ===== 圆角 ===== */
+  --theme-radius-xs: 4px;
+  --theme-radius-sm: 10px;
+  --theme-radius-md: 12px;
+  --theme-radius-lg: 14px;
+  --theme-radius-xl: 18px;
+  --theme-radius-xxl: 20px;
+  --theme-radius-pill: 100px;
+  --theme-radius-round: 50%;
+
+  /* ===== 字体 ===== */
+  --theme-font-display: 'Quicksand', sans-serif;
+  --theme-font-body: 'Sora', sans-serif;
+
+  /* ===== 动效 ===== */
+  --theme-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --theme-duration: 0.3s;
+
+  /* ===== Element Plus 遮罩/加载层（外部主题也需要） ===== */
+  --el-overlay-color: rgba(0, 0, 0, 0.3);
+  --el-overlay-color-lighter: rgba(0, 0, 0, 0.15);
+  --el-mask-color: rgba(0, 0, 0, 0.35);
+  --el-mask-color-extra-light: rgba(0, 0, 0, 0.15);
+}
+
+/* 限定 data-theme 作用域，不影响旧布局 */
+[data-theme] .el-button {
+  border-radius: var(--theme-radius-pill);
+  font-family: var(--theme-font-body);
+  font-size: 12px;
+}
+
+/* 默认按钮 — 使用主题色 */
+[data-theme] .el-button--default {
+  background: var(--theme-bg-card);
+  color: var(--theme-text-secondary);
+  border-color: var(--theme-border);
+}
+[data-theme] .el-button--default:hover {
+  background: var(--theme-bg-hover);
+  color: var(--theme-accent-primary);
+  border-color: var(--theme-accent-primary);
+}
+[data-theme] .el-button--default:active {
+  background: var(--theme-bg-active);
+  color: var(--theme-accent-primary);
+  border-color: var(--theme-accent-primary);
+}
+
+/* 主要按钮 — 纯色点缀 */
+[data-theme] .el-button--primary {
+  background: var(--theme-accent-primary);
+  color: var(--theme-text-white);
+  border: none;
+}
+[data-theme] .el-button--primary:hover {
+  filter: brightness(1.08);
+}
+[data-theme] .el-button--primary:active {
+  filter: brightness(0.95);
+}
+[data-theme] .el-button--primary.is-disabled {
+  opacity: 0.4;
+}
+
+[data-theme] .el-input__wrapper {
+  border-radius: var(--theme-radius-pill);
+}
+
+/* ==================== 暗色主题 ==================== */
+[data-theme='dark'] {
+  --theme-bg: #0d1b2a;
+  --theme-bg-card: #1b2838;
+  --theme-bg-sidebar: linear-gradient(180deg, #0f1923, #0f1923);
+  --theme-bg-toolbar: #1b2838;
+  --theme-bg-hover: rgba(100, 180, 255, 0.08);
+  --theme-bg-active: rgba(100, 180, 255, 0.12);
+  --theme-bg-tag: #1e3040;
+  --theme-text-primary: #e0e8f0;
+  --theme-text-secondary: #8a9bb0;
+  --theme-text-muted: #5a6b80;
+  --theme-accent-primary: #6ba8e0;
+  --theme-accent-secondary: #5a8ab0;
+  --theme-accent-hover: #7db8f0;
+  --theme-color-success: #5ab08a;
+  --theme-color-success-dark: #4a9a78;
+  --theme-color-danger: #d48080;
+  --theme-color-warning: #e6a23c;
+  --theme-color-info: #6ba8e0;
+
+  /* ===== 表面色（弹窗/卡片内部） ===== */
+  --theme-surface-secondary: #243848;
+  --theme-surface-hover: #2a4055;
+  --theme-text-on-accent: #ffffff;
+  --theme-border: #2a4055;
+  --theme-border-light: #243848;
+  --theme-color-scrollbar: #2a4050;
+  --theme-shadow-sm: 0 8px 28px rgba(0, 0, 0, 0.25);
+  --theme-shadow-md: 0 12px 36px rgba(0, 0, 0, 0.3);
+  --theme-shadow-toast: 0 6px 24px rgba(0, 0, 0, 0.3);
+
+  /* 暗色独有的 El 覆盖（overlay/mask 等与透明度相关的） */
+  --el-overlay-color: rgba(0, 0, 0, 0.4);
+  --el-overlay-color-lighter: rgba(0, 0, 0, 0.2);
+  --el-mask-color: rgba(0, 0, 0, 0.7);
+  --el-mask-color-extra-light: rgba(0, 0, 0, 0.3);
+}
+
+/* ==================== 通用 Element Plus 变量映射 ==================== */
+/* 所有主题共享，使 El 组件跟随 --theme-* 变量变化（包括外部暗色主题） */
+[data-theme] {
+  --el-bg-color: var(--theme-bg-card);
+  --el-bg-color-overlay: var(--theme-bg-card);
+  --el-bg-color-page: var(--theme-bg);
+  --el-text-color-primary: var(--theme-text-primary);
+  --el-text-color-regular: var(--theme-text-secondary);
+  --el-text-color-secondary: var(--theme-text-muted);
+  --el-text-color-placeholder: var(--theme-text-muted);
+  --el-border-color: var(--theme-border);
+  --el-border-color-light: var(--theme-border-light);
+  --el-border-color-lighter: var(--theme-border-light);
+  --el-border-color-extra-light: var(--theme-border-light);
+  --el-fill-color: var(--theme-bg-card);
+  --el-fill-color-light: var(--theme-bg-tag);
+  --el-fill-color-lighter: var(--theme-bg-card);
+  --el-fill-color-blank: var(--theme-bg-card);
+  --el-dialog-bg-color: var(--theme-bg-card);
+  --el-dialog-title-font-size: 16px;
+  --el-dialog-content-font-size: 14px;
+  --el-color-primary: var(--theme-accent-primary);
+  --el-color-white: var(--theme-text-white);
+  --el-color-black: #000000;
+}

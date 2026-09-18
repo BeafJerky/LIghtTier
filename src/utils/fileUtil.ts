@@ -1,0 +1,433 @@
+/**
+ * 文件与资源工具层 — 基于 Tauri FS / HTTP / Shell 插件的统一封装
+ *
+ * 路径约定：所有文件操作基于 BaseDirectory（Android: AppData / 桌面: Resource），
+ * 只传相对路径，禁止用 resourceDir() 拼绝对路径后传入；
+ * 职责：目录检查创建、文件读写/列举/删除、内置 config.json 读写、下载（放宽
+ * GitHub 重定向）、解压（fflate，剥离压缩包公共前缀目录）、打开系统路径与日志清理。
+ */
+import { CONFIG_PATH, CORE_PATH, LOG_PATH, RESOURCE_PATH, USER_AGENT } from '@/constants/easytier'
+import { dirname, extname, join, resourceDir } from '@tauri-apps/api/path'
+import {
+  BaseDirectory,
+  exists,
+  mkdir,
+  readDir,
+  readFile,
+  readTextFile,
+  remove,
+  writeFile,
+  writeTextFile
+} from '@tauri-apps/plugin-fs'
+import { fetch } from '@tauri-apps/plugin-http'
+import { attachConsole, error, info } from '@tauri-apps/plugin-log'
+import { open } from '@tauri-apps/plugin-shell'
+import { unzipSync } from 'fflate'
+import { isAndroid } from './platformUtil'
+import pkg from '../../package.json'
+import dayjs from 'dayjs'
+
+// 启用 TargetKind::Webview 后，这个函数将把日志打印到浏览器控制台
+attachConsole()
+
+// 运行时基础目录：Android 使用应用数据目录（AppData），桌面使用打包资源目录（Resource）
+const getBaseDir = (): BaseDirectory =>
+  isAndroid() ? BaseDirectory.AppData : BaseDirectory.Resource
+
+/**
+ * 确保目录存在（不存在则递归创建）
+ * 传入文件路径时自动取父目录；基址随平台（Android: AppData / 桌面: Resource）
+ */
+export const checkDir = async (dirPath: string = RESOURCE_PATH) => {
+  try {
+    try {
+      // @ts-ignore
+      const _e = await extname(dirPath)
+      // 有扩展名视为文件路径，取其父目录；无扩展名（如 resource/core）视为目录本身
+      if (_e) {
+        dirPath = await dirname(dirPath)
+      }
+    } catch (_error) {
+      /* empty */
+    }
+    const dirExists = await exists(dirPath, { baseDir: getBaseDir() })
+    if (!dirExists) {
+      await mkdir(dirPath, { baseDir: getBaseDir(), recursive: true })
+    }
+  } catch (e: any) {
+    error(`创建resource目录时出错:${JSON.stringify(e)}`)
+    throw e
+  }
+}
+
+// 检测文件是否存在，不存在则创建空文件
+export const fileExist = async (filePath: string) => {
+  const exist = await exists(filePath, { baseDir: getBaseDir() })
+  if (!exist) {
+    await writeFileContent(filePath, '', { baseDir: getBaseDir() })
+  }
+  return exist
+}
+// 获取resource目录，如果resource目录不存在，则调用checkResourceDir创建，最终返回带'resource'后缀的目录
+export const getResourceDir = async () => {
+  await checkDir()
+  return await join(await resourceDir(), RESOURCE_PATH)
+}
+// 获取 easytier-cli 可执行文件路径（同时确保 core 目录存在）
+export const getCliDir = async () => {
+  await checkDir(CORE_PATH)
+  return await join(await resourceDir(), CORE_PATH, 'easytier-cli')
+}
+// 获取 easytier-core 可执行文件路径（同时确保 core 目录存在）
+export const getCoreDir = async () => {
+  await checkDir(CORE_PATH)
+  return await join(await resourceDir(), CORE_PATH, 'easytier-core')
+}
+// 获取resource下的logs目录
+export const getLogsDir = async () => {
+  await checkDir(LOG_PATH)
+  return await join(await resourceDir(), LOG_PATH)
+}
+
+/**
+ * 写入内容到文件
+ * 1.支持写入字符串或二进制数据 (Uint8Array)
+ * 2.可以指定基础目录 (默认为 AppData)
+ * 3.支持追加模式和创建新文件的选项
+ * 4.包含完整的错误处理
+ * @param filePath 文件路径
+ * @param content 写入的内容
+ * @param options 可选参数
+ *
+ * 使用示例:
+ * ```
+ *  await writeFileContent('config.json', '{"setting": "value"}');
+ *   // 使用选项
+ *   await writeFileContent('data.txt', 'content', {
+ *     baseDir: BaseDirectory.AppConfig,
+ *     append: true,
+ *     createNew: false
+ *   });
+ *   // 写入二进制数据
+ *   const binaryData = new Uint8Array([1, 2, 3]);
+ *   await writeFileContent('data.bin', binaryData);
+ * ```
+ */
+export async function writeFileContent(
+  filePath: string,
+  content: string | Uint8Array,
+  options?: {
+    baseDir?: BaseDirectory // 基础目录
+    append?: boolean // 是否追加模式
+    createNew?: boolean // 是否创建新文件
+  }
+): Promise<void> {
+  try {
+    const finalOptions = { baseDir: getBaseDir(), append: false, ...options }
+    await checkDir(filePath)
+    if (typeof content === 'string') {
+      // 使用 writeTextFile 处理字符串内容
+      await writeTextFile(filePath, content, finalOptions)
+    } else {
+      // 二进制内容继续使用 writeFile
+      await writeFile(filePath, content, finalOptions)
+    }
+  } catch (e: any) {
+    error(`写入文件时出错:${JSON.stringify(e)}`)
+    throw e
+  }
+}
+
+/**
+ * 读取文件内容的通用方法
+ * @param filePath 文件路径
+ * @param options 可选参数
+ * @returns Promise<string | Uint8Array> 返回文件内容，如果 asBinary 为 true 则返回 Uint8Array，否则返回字符串
+ *
+ * 使用示例:
+ * ```typescript
+ * // 读取文本文件
+ * const textContent = await readFileContent('config.json');
+ *
+ * // 读取二进制文件
+ * const binaryContent = await readFileContent('data.bin', { asBinary: true });
+ *
+ * // 从特定目录读取
+ * const configContent = await readFileContent('settings.json', {
+ *   baseDir: BaseDirectory.AppConfig
+ * });
+ * ```
+ */
+export async function readFileContent(
+  filePath: string,
+  options?: {
+    baseDir?: BaseDirectory // 基础目录
+    asBinary?: boolean // 是否以二进制方式读取
+  }
+): Promise<string | Uint8Array> {
+  try {
+    const { baseDir = getBaseDir(), asBinary = false } = options || {}
+    await checkDir(filePath)
+    if (asBinary) {
+      const content = await readFile(filePath, { baseDir })
+      return content
+    } else {
+      const content = await readTextFile(filePath, { baseDir })
+      return content
+    }
+  } catch (e: any) {
+    if (!JSON.stringify(e).includes('系统找不到指定的文件')) {
+      error(`Error reading file ${filePath}:${JSON.stringify(e)}`)
+    }
+    return ''
+  }
+}
+
+// 列出目录下的所有文件
+export const listFiles = async (targetDir: string = RESOURCE_PATH) => {
+  try {
+    await checkDir(targetDir)
+    const entries = await readDir(targetDir, { baseDir: getBaseDir() })
+    return entries.map((entry) => entry.name)
+  } catch (e: any) {
+    error(`Error listing resource files:${JSON.stringify(e)}`)
+    return []
+  }
+}
+
+// 列出 resource 目录下的所有 .toml 文件
+export const listTomlFiles = async (targetDir: string = CONFIG_PATH) => {
+  try {
+    // @ts-ignore
+    const _ = await checkDir(targetDir)
+
+    const entries = await readDir(targetDir, { baseDir: getBaseDir() })
+    return entries.filter((entry) => entry.name.endsWith('.toml')).map((entry) => entry.name)
+  } catch (e: any) {
+    error(`Error listing resource files:${JSON.stringify(e)}`)
+    return []
+  }
+}
+
+// 写入 resource 目录下的 config.json 文件
+export const writeConfigJsonObj = async (obj: any) => {
+  const configJsonPath = await join(RESOURCE_PATH, 'config.json')
+  await checkDir(configJsonPath)
+  await writeFileContent(configJsonPath, JSON.stringify(obj), {
+    baseDir: getBaseDir()
+  })
+}
+
+// 读取 resource 目录下的 config.json 文件，并返回 JSON 对象
+export const getConfigJsonObj = async () => {
+  try {
+    const configJsonPath = await join(RESOURCE_PATH, 'config.json')
+    await checkDir(configJsonPath)
+    const configJson = await readFileContent(configJsonPath, {
+      baseDir: getBaseDir()
+    })
+    return JSON.parse(configJson as string)
+  } catch (e: any) {
+    error(`读取配置文件失败:${JSON.stringify(e)}`)
+    await writeConfigJsonObj({})
+    return {}
+  }
+}
+
+/**
+ * 强制删除指定路径的文件或目录
+ * @param path 路径
+ */
+export const deleteFileOrDir = async (path: string) => {
+  await remove(path, { baseDir: getBaseDir(), recursive: true })
+}
+
+/**
+ * 下载文件
+ * @param fileUrl 文件URL
+ * @returns 下载是否成功
+ * 使用示例：
+ * ```typescript
+ * const success = await downloadFile('https://example.com/file.zip');
+ * ```
+ */
+export async function downloadFile(fileUrl: string): Promise<boolean> {
+  try {
+    info(`开始下载:${fileUrl}`)
+    // 使用 Tauri 的 http plugin
+    const response = await fetch(fileUrl, {
+      method: 'GET',
+      headers: {
+        'User-Agent': USER_AGENT,
+        Accept: '*/*',
+        'Cache-Control': 'no-cache',
+        'Upgrade-Insecure-Requests': '1'
+      },
+      // 增加超时时间
+      connectTimeout: 30000,
+      // GitHub release 下载会重定向到 objects.githubusercontent.com（可能多次），适当放宽使下载稳定
+      maxRedirections: 5
+    })
+    if (!response.ok) {
+      // 失败交由调用方统一提示
+      return false
+    }
+
+    // 获取文件名从 URL 中提取
+    const filename = fileUrl.split('/').pop() || 'downloaded_file'
+
+    // 构建保存路径（核心独立存放在 resource/core 下）
+    const savePath = await join(CORE_PATH, filename)
+
+    // 确保目录存在
+    await checkDir(CORE_PATH)
+
+    // 获取二进制数据
+    const uint8Array = new Uint8Array(await response.arrayBuffer())
+    info(`开始写入文件:${savePath}`)
+
+    // 写入文件
+    await writeFileContent(savePath, uint8Array, {
+      baseDir: getBaseDir()
+    })
+
+    return true
+  } catch (e: any) {
+    error(`下载文件时出错:${JSON.stringify(e)}`)
+    return false
+  }
+}
+
+/**
+ * 1.在资源管理器中打开指定目录
+ * 2.在浏览器中打开指定网址
+ * @param path 要打开的目录路径或网址
+ */
+export async function openPath(path: string) {
+  try {
+    await open(path)
+  } catch (e: any) {
+    error(`打开资源管理器失败:${JSON.stringify(e)}`)
+  }
+}
+
+/**
+ * 解压文件到指定目录，支持处理多层目录
+ * @param zipPath 压缩文件路径（相对于 Resource 目录）
+ * @param destPath 解压目标目录（相对于 Resource 目录）
+ * @param keepDir   是否保留原路径
+ * @returns Promise<boolean> 解压是否成功
+ */
+export async function extractFile(
+  zipPath: string,
+  destPath: string,
+  keepDir: boolean = false
+): Promise<boolean> {
+  try {
+    // 读取zip文件内容  resource\easytier-windows-x86_64-v2.0.3.zip
+    const zipContent = (await readFileContent(zipPath, {
+      baseDir: getBaseDir(),
+      asBinary: true
+    })) as Uint8Array
+
+    // 使用 fflate 解压
+    const files = unzipSync(zipContent)
+
+    // 分析目录结构，找到最深的公共目录
+    const paths = Object.keys(files)
+    // easytier-windows-x86_64/
+    const commonPrefix = await findCommonPrefix(paths)
+    // 写入解压后的文件
+    for (const [filePath, fileData] of Object.entries(files)) {
+      try {
+        // filePath:easytier-windows-x86_64/easytier-cli.exe
+        // 如果文件在子目录中，去掉公共前缀  easytier-cli.exe
+        const relativePath = commonPrefix ? filePath.replace(commonPrefix, '') : filePath
+        // 跳过目录项
+        if (relativePath.endsWith('/')) continue
+
+        // 构建目标文件路径 resource\easytier-cli.exe
+        let targetPath: string
+        if (keepDir) {
+          targetPath = await join(destPath, filePath)
+        } else {
+          targetPath = await join(destPath, relativePath)
+        }
+        // 确保目标目录存在
+        await checkDir(await dirname(targetPath))
+
+        // 写入文件
+        await writeFileContent(targetPath, fileData, {
+          baseDir: getBaseDir()
+        })
+      } catch (e: any) {
+        error(`处理文件 ${filePath} 时出错:${JSON.stringify(e)}`)
+      }
+    }
+
+    // 删除zip文件（解压产物已就位，压缩包不再需要）
+    await deleteFileOrDir(zipPath)
+    return true
+  } catch (e: any) {
+    error(`解压文件时出错:${JSON.stringify(e)}`)
+    return false
+  }
+}
+
+/**
+ * 查找所有路径的公共前缀目录
+ * @param paths 路径数组
+ * @returns 公共前缀
+ */
+async function findCommonPrefix(paths: string[]): Promise<string> {
+  if (paths.length === 0) return ''
+  if (paths.length === 1) return await dirname(paths[0])
+
+  // 分割所有路径
+  const parts = paths.map((p) => p.split('/').filter(Boolean))
+
+  const prefix: string[] = []
+  const firstParts = parts[0]
+
+  for (let i = 0; i < firstParts.length; i++) {
+    const part = firstParts[i]
+    if (parts.every((p) => p[i] === part)) {
+      prefix.push(part)
+    } else {
+      break
+    }
+  }
+
+  return prefix.length > 0 ? `${prefix.join('/')}/` : ''
+}
+
+// 清空程序logs目录下 pkg name 的日志文件，以免日志文件过大
+export const clearLogs = async () => {
+  try {
+    const logsFile = await join('logs', pkg.name + '.log')
+    // 清空 logsFile 的内容（如果失败不影响程序启动）
+    await writeFileContent(logsFile, '', { baseDir: getBaseDir() })
+  } catch (e: any) {
+    // 如果清理失败，只记录警告，不阻塞启动
+    error(`清理日志文件失败（不影响使用）: ${e.message || e}`)
+  }
+}
+
+// 清空logs目录下 easytier 的日志文件
+export const clearETLogs = async (fileName: string) => {
+  try {
+    const date = dayjs(new Date()).format('YYYY-MM-DD')
+
+    let logsFile = await join('logs', fileName + '.' + date)
+    await writeFileContent(logsFile, '', { baseDir: getBaseDir() })
+
+    logsFile = await join('logs', fileName + '.' + date + '.log')
+    await writeFileContent(logsFile, '', { baseDir: getBaseDir() })
+
+    logsFile = await join('logs', 'easytier.log')
+    await writeFileContent(logsFile, '', { baseDir: getBaseDir() })
+  } catch (e: any) {
+    // 如果清理失败，只记录警告，不阻塞启动
+    error(`清理日志文件失败（不影响使用）: ${e.message || e}`)
+  }
+}

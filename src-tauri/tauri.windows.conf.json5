@@ -1,0 +1,26 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "identifier": "com.lighttier.app",
+  "app": {
+    "windows": [
+      {
+        "decorations": false,
+        "shadow": true
+      }
+    ]
+  },
+  "bundle": {
+    "windows": {
+      "allowDowngrades": true,
+      "webviewInstallMode": {
+        "type": "embedBootstrapper",
+        "silent": true
+      },
+      "nsis": {
+        "displayLanguageSelector": true,
+        "installMode": "perMachine",
+        "languages": ["SimpChinese", "English"]
+      }
+    }
+  }
+}

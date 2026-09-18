@@ -1,0 +1,68 @@
+# =====================================================================
+# LightTier .gitignore
+#
+# 必提交清单（勿误加忽略）：
+#   src-tauri/vendor/proc-macro-crate  Cargo path 依赖（Android 构建补丁源）
+#   tauri-plugin-vpnservice            Cargo path 依赖（Android VPN 插件）
+#   src-tauri/resource/core            内置 easytier 内核压缩包
+#   src-tauri/tools/protoc-fetch       构建工具源码（target 除外）
+#   src-tauri/gen/android              Android 工程（自带 .gitignore 处理产物）
+#   pnpm-lock.yaml                     依赖锁定，保证双端构建可复现
+# =====================================================================
+
+# ----- 依赖安装 -----
+node_modules
+
+# ----- 包管理器（pnpm 为唯一包管理器，见 AGENTS.md，禁止 npm / yarn）-----
+package-lock.json
+yarn.lock
+pnpm-debug.log*
+
+# ----- 构建产物 -----
+dist
+dist-ssr
+stats.html
+target
+*.tsbuildinfo
+
+# ----- 临时文件与内核运行日志（--file-log-dir 默认 ./log）-----
+tmp
+.tmp
+/log/
+
+# ----- 本地环境覆盖 -----
+*.local
+
+# ----- 编辑器 / 系统文件 -----
+.idea
+.vscode
+.nvmdrc
+.DS_Store
+Thumbs.db
+*.iml
+
+# ----- AI 工具（指导文档与个人缓存统一不进仓库）-----
+.claude
+.ai
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+CLAUDE.local.md
+.cursorrules
+.clinerules
+.windsurfrules
+.codex/
+.specstory/
+.aider*
+
+# ----- husky 自动生成的钩子代理 -----
+.husky/_
+
+# ----- Android 签名与本地机密（泄漏防护）-----
+*.jks
+*.keystore
+local.properties
+key.properties
+
+# ----- Tauri 移动端构建缓存 -----
+.tauri/
