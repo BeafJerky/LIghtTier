@@ -137,10 +137,7 @@
                   <div
                     class="sd-select-option"
                     :class="{ active: !store.autoRunConfigName }"
-                    @click="
-                      handleAutoRunConfigChange('')
-                      configDropdownOpen = false
-                    "
+                    @click="(handleAutoRunConfigChange(''), (configDropdownOpen = false))"
                     >{{ t('newSettings.lastRunConfig') }}</div
                   >
                   <div
@@ -149,8 +146,7 @@
                     class="sd-select-option"
                     :class="{ active: store.autoRunConfigName === item.configFileName }"
                     @click="
-                      handleAutoRunConfigChange(item.configFileName)
-                      configDropdownOpen = false
+                      (handleAutoRunConfigChange(item.configFileName), (configDropdownOpen = false))
                     "
                     >{{ item.configFileName }}</div
                   >
@@ -218,8 +214,7 @@
                     class="sd-select-option"
                     :class="{ active: store.defaultServiceInstallMethod === 'nssm' }"
                     @click="
-                      store.setDefaultServiceInstallMethod('nssm')
-                      methodDropdownOpen = false
+                      (store.setDefaultServiceInstallMethod('nssm'), (methodDropdownOpen = false))
                     "
                     >NSSM</div
                   >
@@ -227,8 +222,8 @@
                     class="sd-select-option"
                     :class="{ active: store.defaultServiceInstallMethod === 'official' }"
                     @click="
-                      store.setDefaultServiceInstallMethod('official')
-                      methodDropdownOpen = false
+                      (store.setDefaultServiceInstallMethod('official'),
+                      (methodDropdownOpen = false))
                     "
                     >{{ t('newWebConfig.officialCli') }}</div
                   >
@@ -404,10 +399,7 @@
                       :key="item.tag_name"
                       class="sd-select-option"
                       :class="{ active: coreVerSelect === item.tag_name }"
-                      @click="
-                        coreVerSelect = item.tag_name
-                        versionDropdownOpen = false
-                      "
+                      @click="((coreVerSelect = item.tag_name), (versionDropdownOpen = false))"
                     >
                       {{ item.tag_name }}
                     </div>

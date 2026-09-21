@@ -50,10 +50,7 @@
               :key="tpl.id"
               class="ed-select-option"
               :class="{ active: templateId === tpl.id }"
-              @click="
-                applyTemplate(tpl.id)
-                templateDropdownOpen = false
-              "
+              @click="(applyTemplate(tpl.id), (templateDropdownOpen = false))"
               >✦ {{ t(tpl.labelKey) }}</div
             >
           </div>
@@ -239,14 +236,9 @@
               />
               <button class="ed-tag-del" @click="removeFlag(i)">✕</button>
             </div>
-            <button
-              class="ed-tag-add"
-              @click="
-                formFlagsKeys.push('')
-                formFlagsVals.push('')
-              "
-              >{{ t('newEdit.addFlag') }}</button
-            >
+            <button class="ed-tag-add" @click="(formFlagsKeys.push(''), formFlagsVals.push(''))">{{
+              t('newEdit.addFlag')
+            }}</button>
           </div>
         </div>
 
