@@ -27,6 +27,9 @@ import '@/styles/index.less'
 // 引入主题系统
 import '@/styles/theme.css'
 
+// 引入自适应层（触屏命中区/按压态、系统减少动效、触屏窄屏字号）
+import '@/styles/adaptive.css'
+
 // 引入动画
 import '@/plugins/animate.css'
 
@@ -109,5 +112,5 @@ const setupAll = async () => {
 
 setupAll().catch((err) => {
   console.error('应用启动失败:', err)
-  alert('应用启动失败，请查看日志文件或联系开发者')
+  alert(t('newCommon.appStartFail'))
 })

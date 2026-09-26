@@ -191,15 +191,15 @@ onUnmounted(() => {
 .lv-root {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--theme-space-2);
 }
 
 .lv-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  padding: 10px 14px;
+  gap: var(--theme-space-2);
+  padding: var(--theme-space-3) var(--theme-space-4);
   background: var(--theme-bg-tag);
   border: 1.5px solid var(--theme-border-light);
   border-radius: var(--theme-radius-md);
@@ -213,13 +213,13 @@ onUnmounted(() => {
 .lv-toolbar-actions {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--theme-space-2);
 }
 
 .lv-auto {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--theme-space-2);
   font-size: 11px;
   color: var(--theme-text-secondary);
   cursor: pointer;
@@ -271,7 +271,7 @@ onUnmounted(() => {
 }
 
 .lv-btn {
-  padding: 3px 12px;
+  padding: var(--theme-space-1) var(--theme-space-3);
   font-family: var(--theme-font-body);
   font-size: 11px;
   font-weight: 500;
@@ -295,7 +295,7 @@ onUnmounted(() => {
 
 .lv-panel {
   height: 220px;
-  padding: 10px 14px;
+  padding: var(--theme-space-3) var(--theme-space-4);
   overflow-y: auto;
   font-family: 'Cascadia Code', Consolas, 'Courier New', monospace;
   font-size: 11.5px;

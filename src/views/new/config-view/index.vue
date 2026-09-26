@@ -187,10 +187,10 @@
       </div>
 
       <div class="nw-section" v-if="selectedDetail.flags"
-        ><div class="nw-section-title">Flags</div>
+        ><div class="nw-section-title">{{ t('newConfig.flagsSection') }}</div>
         <div class="nw-grid">
           <div class="nw-field" v-for="(val, key) in selectedDetail.flags" :key="key">
-            <span class="nw-label">{{ key }}</span>
+            <span class="nw-label">{{ flagLabel(key) }}</span>
             <span class="nw-val">{{
               typeof val === 'boolean' ? (val ? '✓' : '✗') : val || '—'
             }}</span>
@@ -344,6 +344,12 @@
  * - Windows 服务面板与退出节点路由仅非 Android 环境展示；详情读取失败时回退内置演示数据。
  */
 import { CONFIG_PATH } from '@/constants/easytier'
+import {
+  SECURITY_FIELD_DEFS,
+  ADVANCED_FLAG_DEFS,
+  ADVANCED_TEXT_DEFS,
+  ADVANCED_TOP_TEXT_DEFS
+} from '@/constants/defaultData'
 import { useEasyTierStore } from '@/store/modules/easytier'
 import * as toml from 'smol-toml'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
@@ -393,6 +399,21 @@ const {
 } = useMockData()
 const { t } = useI18n()
 const router = useRouter()
+
+// 详情面板 flags：已知字段 key → i18n 标签（与编辑表单同源定义），未知 key 回退原文
+const FLAG_LABEL_KEY_MAP: Record<string, string> = {}
+for (const def of [
+  ...SECURITY_FIELD_DEFS,
+  ...ADVANCED_FLAG_DEFS,
+  ...ADVANCED_TEXT_DEFS,
+  ...ADVANCED_TOP_TEXT_DEFS
+]) {
+  FLAG_LABEL_KEY_MAP[def.key] = def.labelKey
+}
+const flagLabel = (key: string): string => {
+  const labelKey = FLAG_LABEL_KEY_MAP[key]
+  return labelKey ? t(labelKey) : key
+}
 
 // 将 useMockData 返回的原始状态 key 映射为国际化字符串
 const mapServiceStatus = (key: string): string => {
@@ -1008,7 +1029,7 @@ const handleUninstallService = async () => {
 <style scoped>
 .nw-root {
   display: flex;
-  gap: 16px;
+  gap: var(--theme-space-4);
   height: 100%;
   min-height: 0;
   font-family: var(--theme-font-body);
@@ -1020,11 +1041,11 @@ const handleUninstallService = async () => {
   min-height: 0;
   flex-shrink: 0;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--theme-space-2);
 }
 
 .nw-left-label {
-  padding: 0 4px;
+  padding: 0 var(--theme-space-1);
   font-family: var(--theme-font-display);
   font-size: 11px;
   font-weight: 500;
@@ -1037,13 +1058,13 @@ const handleUninstallService = async () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 4px;
+  padding: 0 var(--theme-space-1);
 }
 
 .nw-left-btns {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--theme-space-1);
 }
 
 .nw-add-btn {
@@ -1072,17 +1093,17 @@ const handleUninstallService = async () => {
 .nw-left-scroll {
   display: flex;
   min-height: 0;
-  padding: 12px;
+  padding: var(--theme-space-3);
   overflow-y: auto;
   background: var(--theme-bg-tag);
   border-radius: var(--theme-radius-md);
   flex: 1;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--theme-space-3);
 }
 
 .nw-card {
-  padding: 14px 16px;
+  padding: var(--theme-space-4);
   overflow: hidden;
   cursor: pointer;
   background: var(--theme-bg-card);
@@ -1106,13 +1127,13 @@ const handleUninstallService = async () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 4px;
+  margin-bottom: var(--theme-space-1);
 }
 
 .nw-card-status {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: var(--theme-space-1);
 }
 
 .nw-dot {
@@ -1148,18 +1169,18 @@ const handleUninstallService = async () => {
 }
 
 .nw-card-sub {
-  margin-bottom: 10px;
+  margin-bottom: var(--theme-space-3);
   font-size: 11px;
   color: var(--theme-text-muted);
 }
 
 .nw-card-actions {
   display: flex;
-  gap: 6px;
+  gap: var(--theme-space-2);
 }
 
 .nw-btn {
-  padding: 4px 16px;
+  padding: var(--theme-space-1) var(--theme-space-4);
   font-family: var(--theme-font-body);
   font-size: 11px;
   font-weight: 500;
@@ -1195,7 +1216,7 @@ const handleUninstallService = async () => {
 
 .nw-right {
   min-height: 0;
-  padding: 20px 22px;
+  padding: var(--theme-space-5) var(--theme-space-6);
   overflow-y: auto;
   background: var(--theme-bg-card);
   border: 1.5px solid var(--theme-border);
@@ -1226,7 +1247,7 @@ const handleUninstallService = async () => {
 
   .nw-right {
     flex: 1;
-    padding: 14px 16px;
+    padding: var(--theme-space-4);
   }
 
   /* 提高特异性，覆盖基础 display:none，确保窄屏详情态返回按钮可见 */
@@ -1237,7 +1258,7 @@ const handleUninstallService = async () => {
   /* 详情头部允许换行，避免标题与按钮组互挤导致标题竖排/按钮溢出 */
   .nw-detail-header {
     flex-wrap: wrap;
-    gap: 10px;
+    gap: var(--theme-space-3);
   }
 
   .nw-detail-title-row {
@@ -1264,7 +1285,7 @@ const handleUninstallService = async () => {
 /* 移动端返回按钮（默认隐藏，仅窄屏在详情头部展示） */
 .nw-back-btn {
   display: none;
-  padding: 5px 12px;
+  padding: var(--theme-space-1) var(--theme-space-3);
   font-family: var(--theme-font-body);
   font-size: 12px;
   font-weight: 500;
@@ -1276,7 +1297,7 @@ const handleUninstallService = async () => {
   border-radius: var(--theme-radius-pill);
   transition: all 0.2s;
   align-items: center;
-  gap: 6px;
+  gap: var(--theme-space-2);
 }
 
 .nw-back-btn:hover {
@@ -1286,8 +1307,8 @@ const handleUninstallService = async () => {
 
 .nw-detail-header {
   display: flex;
-  padding-bottom: 14px;
-  margin-bottom: 16px;
+  padding-bottom: var(--theme-space-4);
+  margin-bottom: var(--theme-space-4);
   border-bottom: 2px solid var(--theme-border-light);
   align-items: center;
   justify-content: space-between;
@@ -1296,7 +1317,7 @@ const handleUninstallService = async () => {
 .nw-detail-title-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--theme-space-3);
 }
 
 .nw-detail-title {
@@ -1308,7 +1329,7 @@ const handleUninstallService = async () => {
 }
 
 .nw-badge {
-  padding: 2px 12px;
+  padding: 2px var(--theme-space-3);
   font-family: var(--theme-font-body);
   font-size: 10px;
   border-radius: var(--theme-radius-pill);
@@ -1328,11 +1349,11 @@ const handleUninstallService = async () => {
 
 .nw-detail-actions {
   display: flex;
-  gap: 8px;
+  gap: var(--theme-space-2);
 }
 
 .nw-btn-lg {
-  padding: 6px 20px;
+  padding: var(--theme-space-2) var(--theme-space-5);
   font-family: var(--theme-font-body);
   font-size: 12px;
   font-weight: 500;
@@ -1390,19 +1411,19 @@ const handleUninstallService = async () => {
 }
 
 .nw-section {
-  margin-bottom: 16px;
+  margin-bottom: var(--theme-space-4);
 }
 
 .nw-section-title {
   display: flex;
-  margin-bottom: 10px;
+  margin-bottom: var(--theme-space-3);
   font-family: var(--theme-font-display);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 1px;
   color: var(--theme-accent-primary);
   align-items: center;
-  gap: 8px;
+  gap: var(--theme-space-2);
 }
 
 .nw-section-title::after {
@@ -1424,7 +1445,7 @@ const handleUninstallService = async () => {
 
 .nw-field {
   display: flex;
-  padding: 10px 14px;
+  padding: var(--theme-space-3) var(--theme-space-4);
   background: var(--theme-bg-card);
   flex-direction: column;
   gap: 2px;
@@ -1432,7 +1453,7 @@ const handleUninstallService = async () => {
 
 .nw-field-full {
   display: flex;
-  padding: 10px 14px;
+  padding: var(--theme-space-3) var(--theme-space-4);
   background: var(--theme-bg-card);
   flex-direction: column;
   gap: 2px;
@@ -1456,12 +1477,12 @@ const handleUninstallService = async () => {
 .nw-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: var(--theme-space-1);
   padding: 2px 0;
 }
 
 .nw-tag {
-  padding: 2px 10px;
+  padding: 2px var(--theme-space-3);
   font-size: 11px;
   color: var(--theme-text-secondary);
   background: var(--theme-bg-tag);
@@ -1471,7 +1492,7 @@ const handleUninstallService = async () => {
 
 .nw-route-filter {
   width: 100%;
-  padding: 6px 14px;
+  padding: var(--theme-space-2) var(--theme-space-4);
   font-family: var(--theme-font-body);
   font-size: 12px;
   color: var(--theme-text-primary);
@@ -1494,15 +1515,15 @@ const handleUninstallService = async () => {
 .nw-route-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 8px;
-  margin-top: 10px;
+  gap: var(--theme-space-2);
+  margin-top: var(--theme-space-3);
 }
 
 .nw-route-card {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  padding: 10px 12px;
+  gap: var(--theme-space-1);
+  padding: var(--theme-space-3);
   background: var(--theme-bg);
   border: 1.5px solid var(--theme-border-light);
   border-radius: var(--theme-radius-md);
@@ -1523,7 +1544,7 @@ const handleUninstallService = async () => {
 
 .nw-route-empty {
   display: inline-block;
-  margin-top: 10px;
+  margin-top: var(--theme-space-3);
   font-size: 12px;
   color: var(--theme-text-muted);
 }
@@ -1540,7 +1561,7 @@ const handleUninstallService = async () => {
   align-items: center;
   justify-content: center;
   height: 100%;
-  gap: 8px;
+  gap: var(--theme-space-2);
   opacity: 0.5;
 }
 
@@ -1559,8 +1580,8 @@ const handleUninstallService = async () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40px 0;
-  gap: 8px;
+  padding: var(--theme-space-10) 0;
+  gap: var(--theme-space-2);
   color: var(--theme-text-muted);
 }
 
@@ -1571,7 +1592,7 @@ const handleUninstallService = async () => {
 
 .nw-svc-bar {
   display: flex;
-  padding: 12px 16px;
+  padding: var(--theme-space-3) var(--theme-space-4);
   background: var(--theme-bg-tag);
   border: 1.5px solid var(--theme-border-light);
   border-radius: var(--theme-radius-md);
@@ -1582,7 +1603,7 @@ const handleUninstallService = async () => {
 .nw-svc-status {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--theme-space-2);
 }
 
 .nw-svc-dot {
@@ -1627,11 +1648,11 @@ const handleUninstallService = async () => {
 
 .nw-svc-actions {
   display: flex;
-  gap: 6px;
+  gap: var(--theme-space-2);
 }
 
 .nw-svc-desc {
-  margin: 8px 0 0;
+  margin: var(--theme-space-2) 0 0;
   font-size: 12px;
   line-height: 1.5;
   color: var(--theme-text-muted);
@@ -1643,7 +1664,7 @@ const handleUninstallService = async () => {
 }
 
 .nw-btn-sm {
-  padding: 4px 14px;
+  padding: var(--theme-space-1) var(--theme-space-4);
   font-family: var(--theme-font-body);
   font-size: 11px;
   font-weight: 500;
@@ -1654,7 +1675,7 @@ const handleUninstallService = async () => {
 }
 
 .nw-btn-svc-install {
-  padding: 6px 18px;
+  padding: var(--theme-space-2) var(--theme-space-4);
   font-family: var(--theme-font-body);
   font-size: 12px;
   font-weight: 500;
@@ -1708,7 +1729,7 @@ const handleUninstallService = async () => {
 
 .cfm-msg {
   max-height: 260px;
-  padding: 4px 0 0;
+  padding: var(--theme-space-1) 0 0;
   overflow-y: auto;
   font-size: 13px;
   line-height: 1.6;
@@ -1719,12 +1740,12 @@ const handleUninstallService = async () => {
 .cfm-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  margin-top: 18px;
+  gap: var(--theme-space-3);
+  margin-top: var(--theme-space-4);
 }
 
 .nw-btn-cfm {
-  padding: 7px 20px;
+  padding: var(--theme-space-2) var(--theme-space-5);
   font-size: 13px;
   font-weight: 500;
   letter-spacing: 0.3px;

@@ -1,23 +1,27 @@
 <template>
-  <CreamDialog v-model="visible" title="主题设置" width="700px">
+  <CreamDialog v-model="visible" :title="t('newLayout.theme')" width="700px">
     <div class="td-body">
       <!-- 左侧：主题列表 -->
       <div class="td-sidebar">
         <div class="td-sidebar-header">
-          <span class="td-sidebar-title">已安装主题</span>
-          <button class="td-refresh-btn" @click="refreshList">刷新列表</button>
+          <span class="td-sidebar-title">{{ t('newTheme.installed') }}</span>
+          <button class="td-refresh-btn" @click="refreshList">{{
+            t('newTheme.refreshList')
+          }}</button>
         </div>
         <div class="td-list">
           <div
-            v-for="t in themes"
-            :key="t.name"
+            v-for="th in themes"
+            :key="th.name"
             class="td-item"
-            :class="{ active: previewName === t.name }"
-            @click="selectTheme(t.name)"
+            :class="{ active: previewName === th.name }"
+            @click="selectTheme(th.name)"
           >
-            <span class="td-item-dot" :style="{ background: t.color }"></span>
-            <span class="td-item-label">{{ t.label }}</span>
-            <span v-if="t.name === 'cream'" class="td-item-badge">默认</span>
+            <span class="td-item-dot" :style="{ background: th.color }"></span>
+            <span class="td-item-label">{{ th.label }}</span>
+            <span v-if="th.name === defaultThemeName" class="td-item-badge">{{
+              t('newTheme.default')
+            }}</span>
           </div>
         </div>
       </div>
@@ -30,10 +34,10 @@
 
     <template #footer>
       <div class="td-footer">
-        <el-button @click="handleReset">重置默认</el-button>
+        <el-button @click="handleReset">{{ t('newTheme.resetDefault') }}</el-button>
         <div>
-          <el-button @click="visible = false">取消</el-button>
-          <el-button type="primary" @click="handleApply">应用主题</el-button>
+          <el-button @click="visible = false">{{ t('newCommon.cancel') }}</el-button>
+          <el-button type="primary" @click="handleApply">{{ t('newTheme.applyTheme') }}</el-button>
         </div>
       </div>
     </template>
@@ -50,12 +54,15 @@
  * 改写为 :host 后注入；点击“应用主题”经 useThemeLoader 应用并持久化。
  */
 import { ref, watch, nextTick, onMounted } from 'vue'
-import { useThemeLoader } from '@/hooks/useThemeLoader'
+import { useI18n } from 'vue-i18n'
+import { systemDefaultTheme, useThemeLoader } from '@/hooks/useThemeLoader'
 import { useExternalThemes } from '@/hooks/useExternalThemes'
 import CreamDialog from '@/components/CreamDialog/index.vue'
 
 const props = defineProps<{ modelValue: boolean }>()
 const emit = defineEmits<{ 'update:modelValue': [value: boolean] }>()
+
+const { t } = useI18n()
 
 // 内部可见态：与父组件 v-model 双向同步
 const visible = ref(props.modelValue)
@@ -69,12 +76,15 @@ watch(visible, (v) => {
   emit('update:modelValue', v)
 })
 
-const { applyTheme, resetTheme } = useThemeLoader()
+const { applyTheme, resetTheme, currentTheme } = useThemeLoader()
 const { externalThemes, discoverThemes } = useExternalThemes()
 
+// 「默认」徽标指向系统偏好推导出的默认主题（用户显式选择不影响它）
+const defaultThemeName = systemDefaultTheme()
+
 const previewRef = ref<HTMLElement>()
-// 当前预览（选中）的主题名，应用时以它为准
-const previewName = ref('cream')
+// 当前预览（选中）的主题名，应用时以它为准；初值为当前生效主题
+const previewName = ref(currentTheme.value)
 let shadowRoot: ShadowRoot | null = null
 
 interface ThemeInfo {
@@ -90,8 +100,8 @@ onMounted(() => refreshList())
 // 刷新主题列表：内置 cream / dark 两项 + 外部主题
 const refreshList = async () => {
   const base: ThemeInfo[] = [
-    { name: 'cream', label: '奶油', color: '#fdf8f4' },
-    { name: 'dark', label: '暗色', color: '#0d1b2a' }
+    { name: 'cream', label: t('newTheme.cream'), color: '#fdf8f4' },
+    { name: 'dark', label: t('newTheme.dark'), color: '#0d1b2a' }
   ]
   const external = await discoverThemes()
   themes.value = [
@@ -106,23 +116,23 @@ const selectTheme = (name: string) => {
   nextTick(() => renderPreview(name))
 }
 
-// 预览区结构与样式模板：用主题变量渲染若干典型 UI 元素以展示效果
-const previewHTML = `
+// 预览区结构与样式模板：用主题变量渲染若干典型 UI 元素以展示效果（文案随当前语言）
+const buildPreviewHTML = () => `
   <div class="pv-wrap">
-    <div class="pv-title">标题文字</div>
-    <div class="pv-sub">次要说明文字，展示主题色效果</div>
+    <div class="pv-title">${t('newTheme.previewTitle')}</div>
+    <div class="pv-sub">${t('newTheme.previewSub')}</div>
     <div class="pv-btns">
-      <button class="pv-btn pv-btn-primary">运行</button>
-      <button class="pv-btn pv-btn-stop">关闭</button>
+      <button class="pv-btn pv-btn-primary">${t('newCommon.run')}</button>
+      <button class="pv-btn pv-btn-stop">${t('newCommon.close')}</button>
     </div>
     <div class="pv-toasts">
-      <span class="pv-toast pv-toast-succ">✅ 启动成功</span>
-      <span class="pv-toast pv-toast-err">❌ 启动失败</span>
+      <span class="pv-toast pv-toast-succ">✅ ${t('newCommon.startSuccess')}</span>
+      <span class="pv-toast pv-toast-err">❌ ${t('newCommon.startFail')}</span>
     </div>
     <div class="pv-card">
-      <div class="pv-card-title">配置卡片</div>
+      <div class="pv-card-title">${t('newTheme.previewCard')}</div>
       <div class="pv-card-text">global-mesh · 10.144.0.1/24</div>
-      <span class="pv-badge">● 运行中</span>
+      <span class="pv-badge">● ${t('newCommon.running')}</span>
     </div>
   </div>
 `
@@ -166,7 +176,7 @@ const renderPreview = (name: string) => {
 
   // 只更新容器内的 HTML，不触碰 style 元素
   const container = shadowRoot.querySelector('.pv-container') as HTMLElement
-  container.innerHTML = previewHTML
+  container.innerHTML = buildPreviewHTML()
 
   const styleEl = shadowRoot.querySelector('style.theme-style') as HTMLStyleElement
 
@@ -204,17 +214,17 @@ const handleApply = () => {
   visible.value = false
 }
 
-// 重置回默认奶油主题并同步预览
+// 重置回默认主题（跟随系统深色偏好）并同步预览
 const handleReset = () => {
-  resetTheme()
-  previewName.value = 'cream'
-  nextTick(() => renderPreview('cream'))
+  const fallback = resetTheme()
+  previewName.value = fallback
+  nextTick(() => renderPreview(fallback))
 }
 
 // 弹窗打开时加载预览
 watch(visible, (v) => {
   if (v) {
-    previewName.value = localStorage.getItem('theme') || 'cream'
+    previewName.value = currentTheme.value
     nextTick(() => renderPreview(previewName.value))
   }
 })
@@ -223,7 +233,7 @@ watch(visible, (v) => {
 <style scoped>
 .td-body {
   display: flex;
-  gap: 16px;
+  gap: var(--theme-space-4);
   min-height: 320px;
 }
 
@@ -232,7 +242,7 @@ watch(visible, (v) => {
   width: 180px;
   flex-shrink: 0;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--theme-space-2);
 }
 
 .td-sidebar-header {
@@ -249,7 +259,7 @@ watch(visible, (v) => {
 }
 
 .td-refresh-btn {
-  padding: 6px 18px;
+  padding: var(--theme-space-2) var(--theme-space-4);
   margin-left: auto;
   font-family: var(--theme-font-body);
   font-size: 12px;
@@ -276,19 +286,19 @@ watch(visible, (v) => {
 .td-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--theme-space-1);
 }
 
 .td-item {
   display: flex;
-  padding: 8px 12px;
+  padding: var(--theme-space-2) var(--theme-space-3);
   font-size: 13px;
   color: var(--theme-text-primary, #4a3728);
   cursor: pointer;
   border-radius: 10px;
   transition: all 0.2s;
   align-items: center;
-  gap: 8px;
+  gap: var(--theme-space-2);
 }
 
 .td-item:hover {
@@ -312,7 +322,7 @@ watch(visible, (v) => {
 }
 
 .td-item-badge {
-  padding: 1px 6px;
+  padding: 1px var(--theme-space-2);
   margin-left: auto;
   font-size: 10px;
   color: var(--theme-text-muted, #c8bdb2);
@@ -345,19 +355,19 @@ watch(visible, (v) => {
   .td-body {
     flex: 1;
     flex-direction: column;
-    gap: 10px;
+    gap: var(--theme-space-3);
   }
 
   .td-sidebar {
     width: 100%;
-    gap: 6px;
+    gap: var(--theme-space-2);
   }
 
   .td-list {
     padding-bottom: 2px;
     overflow-x: auto;
     flex-direction: row;
-    gap: 6px;
+    gap: var(--theme-space-2);
     scrollbar-width: none;
   }
 
@@ -376,7 +386,7 @@ watch(visible, (v) => {
 
   .td-footer {
     flex-wrap: wrap;
-    gap: 8px;
+    gap: var(--theme-space-2);
   }
 }
 </style>

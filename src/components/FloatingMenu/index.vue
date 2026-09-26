@@ -93,12 +93,14 @@ onBeforeUnmount(() => {
 .fab-root {
   position: fixed;
   right: 24px;
-  bottom: 24px;
+
+  /* 避开 Android 手势条 / 底部安全区；桌面端该变量为 0，位置不变 */
+  bottom: calc(24px + var(--lt-safe-area-bottom, 0px));
   z-index: 9000;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: var(--theme-space-2);
 }
 
 /* 主按钮 */
@@ -140,7 +142,7 @@ onBeforeUnmount(() => {
 .fab-menu {
   display: flex;
   min-width: 160px;
-  padding: 4px;
+  padding: var(--theme-space-1);
   background: var(--theme-bg-card);
   border: 1.5px solid var(--theme-border);
   border-radius: var(--theme-radius-lg);
@@ -153,7 +155,7 @@ onBeforeUnmount(() => {
 .fab-menu-item {
   display: flex;
   width: 100%;
-  padding: 8px 14px;
+  padding: var(--theme-space-2) var(--theme-space-4);
   font-family: var(--theme-font-body);
   font-size: 12px;
   font-weight: 500;
@@ -166,7 +168,7 @@ onBeforeUnmount(() => {
   border-radius: var(--theme-radius-sm);
   transition: all 0.15s;
   align-items: center;
-  gap: 8px;
+  gap: var(--theme-space-2);
 }
 
 .fab-menu-item:hover {
@@ -202,6 +204,17 @@ onBeforeUnmount(() => {
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+/* 触屏：没有 hover 可用于「唤起」，半透明会让入口几乎不可见；
+   故常态即保持可见，并把尺寸提到 48dp 主操作按钮标准。
+   桌面端（hover: hover）仍沿用 0.3 + 悬停显现的低干扰策略 */
+@media (hover: none) {
+  .fab-trigger {
+    width: 48px;
+    height: 48px;
+    opacity: 0.9;
   }
 }
 </style>

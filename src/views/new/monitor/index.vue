@@ -232,7 +232,13 @@
  * 平台差异：浏览器用 mockPeers / mockNodeInfo 演示；快照导出仅桌面（Tauri save 对话框）。
  */
 import { useEasyTierStore } from '@/store/modules/easytier'
-import { processPeerData, formatBytes, getNatType, formatMetric } from '@/utils/easyTierUtil'
+import {
+  processPeerData,
+  routeCost,
+  formatBytes,
+  getNatType,
+  formatMetric
+} from '@/utils/easyTierUtil'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import * as coreApi from '@/utils/coreApi'
 import { isAndroid } from '@/utils/platformUtil'
@@ -594,7 +600,7 @@ const mockNodeInfo: Record<string, any> = {
     ipv4_addr: '10.144.0.1',
     version: '2.6.0',
     network_name: 'global-mesh',
-    stun_info: { udp_nat_type: '全锥形' }
+    stun_info: { udp_nat_type: 'FullCone' }
   },
   新加坡出口: {
     hostname: 'sgp-gateway',
@@ -602,7 +608,7 @@ const mockNodeInfo: Record<string, any> = {
     ipv4_addr: '10.144.0.2',
     version: '2.6.0',
     network_name: 'asia-backbone',
-    stun_info: { udp_nat_type: '公网' }
+    stun_info: { udp_nat_type: 'OpenInternet' }
   },
   家庭局域网: {
     hostname: 'home-server',
@@ -610,7 +616,7 @@ const mockNodeInfo: Record<string, any> = {
     ipv4_addr: '10.144.0.10',
     version: '2.6.0',
     network_name: 'home-mesh',
-    stun_info: { udp_nat_type: '限制锥形' }
+    stun_info: { udp_nat_type: 'Restricted' }
   },
   办公室组网: {
     hostname: 'office-gateway',
@@ -618,7 +624,7 @@ const mockNodeInfo: Record<string, any> = {
     ipv4_addr: '10.144.0.20',
     version: '2.6.0',
     network_name: 'office-mesh',
-    stun_info: { udp_nat_type: '全锥形' }
+    stun_info: { udp_nat_type: 'FullCone' }
   },
   移动设备: {
     hostname: 'iphone-14',
@@ -626,7 +632,7 @@ const mockNodeInfo: Record<string, any> = {
     ipv4_addr: '10.144.0.100',
     version: '2.6.0',
     network_name: 'mobile-mesh',
-    stun_info: { udp_nat_type: '端口限制锥形' }
+    stun_info: { udp_nat_type: 'PortRestricted' }
   }
 }
 
@@ -789,7 +795,7 @@ const fetchMonitorData = async (item: RunningItem) => {
     const rawPeers = peerList
 
     const processed = processPeerData(rawPeers)
-    const remotePeers = processed.filter((p) => p.cost !== 'Local' && p.cost !== '本地')
+    const remotePeers = processed.filter((p) => p.cost !== routeCost('Local'))
     const txTotal = remotePeers.reduce((s, p) => s + parseHumanBytes(p.tx_bytes), 0)
     const rxTotal = remotePeers.reduce((s, p) => s + parseHumanBytes(p.rx_bytes), 0)
 
@@ -835,8 +841,8 @@ const handleSnapshotSuccess = (configName: string, snapshot: MonitorSnapshot) =>
   })
   // 5.4：全部远端 Peer 均 P2P 直连时一次性通知（排除本机项，去重复用 p2pNotify 标志位）
   if (!easyTierStore.p2pNotifySetting || !easyTierStore.p2pNotify) return
-  const remotePeers = snapshot.peerList.filter((p) => p.cost !== '本地')
-  if (remotePeers.length > 0 && remotePeers.every((p) => p.cost === 'P2P直连')) {
+  const remotePeers = snapshot.peerList.filter((p) => p.cost !== routeCost('Local'))
+  if (remotePeers.length > 0 && remotePeers.every((p) => p.cost === routeCost('p2p'))) {
     easyTierStore.setP2pNotify(false)
     toast(t('newMonitor.p2pAllConnected'), 'success', 4000)
   }
@@ -954,7 +960,7 @@ onUnmounted(() => {
 <style scoped>
 .nm-root {
   display: flex;
-  gap: 16px;
+  gap: var(--theme-space-4);
   height: 100%;
   min-height: 0;
   font-family: var(--theme-font-body);
@@ -967,11 +973,11 @@ onUnmounted(() => {
   min-height: 0;
   flex-shrink: 0;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--theme-space-2);
 }
 
 .nm-left-label {
-  padding: 0 4px;
+  padding: 0 var(--theme-space-1);
   font-family: var(--theme-font-display);
   font-size: 11px;
   font-weight: 500;
@@ -984,23 +990,23 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 4px;
+  padding: 0 var(--theme-space-1);
 }
 
 .nm-left-scroll {
   display: flex;
   min-height: 0;
-  padding: 12px;
+  padding: var(--theme-space-3);
   overflow-y: auto;
   background: var(--theme-bg-tag);
   border-radius: var(--theme-radius-md);
   flex: 1;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--theme-space-3);
 }
 
 .nm-card {
-  padding: 14px 16px;
+  padding: var(--theme-space-4);
   overflow: hidden;
   cursor: pointer;
   background: var(--theme-bg-card);
@@ -1024,13 +1030,13 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 4px;
+  margin-bottom: var(--theme-space-1);
 }
 
 .nmc-status {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: var(--theme-space-1);
 }
 
 .nmc-dot {
@@ -1076,11 +1082,11 @@ onUnmounted(() => {
 
 .nmc-actions {
   display: flex;
-  gap: 6px;
+  gap: var(--theme-space-2);
 }
 
 .nmc-btn {
-  padding: 4px 16px;
+  padding: var(--theme-space-1) var(--theme-space-4);
   font-family: var(--theme-font-body);
   font-size: 11px;
   font-weight: 500;
@@ -1117,7 +1123,7 @@ onUnmounted(() => {
 /* 右侧详情 */
 .nm-right {
   min-height: 0;
-  padding: 20px 22px;
+  padding: var(--theme-space-5) var(--theme-space-6);
   overflow-y: auto;
   background: var(--theme-bg-card);
   border: 1.5px solid var(--theme-border);
@@ -1128,7 +1134,7 @@ onUnmounted(() => {
 /* 移动端返回按钮（默认隐藏，仅窄屏在详情头部展示） */
 .nm-back-btn {
   display: none;
-  padding: 5px 12px;
+  padding: var(--theme-space-1) var(--theme-space-3);
   font-family: var(--theme-font-body);
   font-size: 12px;
   font-weight: 500;
@@ -1140,7 +1146,7 @@ onUnmounted(() => {
   border-radius: var(--theme-radius-pill);
   transition: all 0.2s;
   align-items: center;
-  gap: 6px;
+  gap: var(--theme-space-2);
 }
 
 .nm-back-btn:hover {
@@ -1171,7 +1177,7 @@ onUnmounted(() => {
 
   .nm-right {
     flex: 1;
-    padding: 14px 16px;
+    padding: var(--theme-space-4);
   }
 
   .nm-back-btn {
@@ -1181,7 +1187,7 @@ onUnmounted(() => {
   /* 详情头部允许换行，避免标题与按钮组互挤导致标题竖排/按钮溢出 */
   .nm-detail-header {
     flex-wrap: wrap;
-    gap: 10px;
+    gap: var(--theme-space-3);
   }
 
   .nm-detail-title-row {
@@ -1207,8 +1213,8 @@ onUnmounted(() => {
 
 .nm-detail-header {
   display: flex;
-  padding-bottom: 14px;
-  margin-bottom: 16px;
+  padding-bottom: var(--theme-space-4);
+  margin-bottom: var(--theme-space-4);
   border-bottom: 2px solid var(--theme-border-light);
   align-items: center;
   justify-content: space-between;
@@ -1217,7 +1223,7 @@ onUnmounted(() => {
 .nm-detail-title-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--theme-space-3);
 }
 
 .nm-detail-title {
@@ -1229,7 +1235,7 @@ onUnmounted(() => {
 }
 
 .nm-badge {
-  padding: 2px 12px;
+  padding: 2px var(--theme-space-3);
   font-family: var(--theme-font-body);
   font-size: 10px;
   border-radius: var(--theme-radius-pill);
@@ -1248,7 +1254,7 @@ onUnmounted(() => {
 }
 
 .nm-detail-rpc {
-  padding: 2px 8px;
+  padding: 2px var(--theme-space-2);
   font-family: var(--theme-font-mono, monospace);
   font-size: 10px;
   color: var(--theme-text-muted);
@@ -1258,11 +1264,11 @@ onUnmounted(() => {
 
 .nm-detail-actions {
   display: flex;
-  gap: 8px;
+  gap: var(--theme-space-2);
 }
 
 .nm-btn-lg {
-  padding: 6px 20px;
+  padding: var(--theme-space-2) var(--theme-space-5);
   font-family: var(--theme-font-body);
   font-size: 12px;
   font-weight: 500;
@@ -1299,13 +1305,13 @@ onUnmounted(() => {
 /* Peer 摘要统计 */
 .nm-peer-summary {
   display: flex;
-  gap: 10px;
-  margin-bottom: 16px;
+  gap: var(--theme-space-3);
+  margin-bottom: var(--theme-space-4);
 }
 
 .nm-peer-stat {
   display: flex;
-  padding: 10px 12px;
+  padding: var(--theme-space-3);
   background: var(--theme-bg-tag);
   border-radius: var(--theme-radius-lg);
   flex: 1;
@@ -1329,7 +1335,7 @@ onUnmounted(() => {
 
 /* 5.16：趋势折叠区块 */
 .nm-trend-collapse {
-  margin-bottom: 16px;
+  margin-bottom: var(--theme-space-4);
   background: var(--theme-bg-tag);
   border: 1.5px solid var(--theme-border-light);
   border-radius: var(--theme-radius-md);
@@ -1337,7 +1343,7 @@ onUnmounted(() => {
 
 .nm-trend-summary {
   display: flex;
-  padding: 10px 14px;
+  padding: var(--theme-space-3) var(--theme-space-4);
   list-style: none;
   cursor: pointer;
   user-select: none;
@@ -1350,7 +1356,7 @@ onUnmounted(() => {
 }
 
 .nm-trend-summary::before {
-  margin-right: 8px;
+  margin-right: var(--theme-space-2);
   font-size: 11px;
   color: var(--theme-text-muted);
   content: '▸';
@@ -1369,11 +1375,11 @@ onUnmounted(() => {
   letter-spacing: 1px;
   color: var(--theme-accent-primary);
   align-items: center;
-  gap: 8px;
+  gap: var(--theme-space-2);
 }
 
 .nm-export-btn {
-  padding: 4px 12px;
+  padding: var(--theme-space-1) var(--theme-space-3);
   font-family: var(--theme-font-body);
   font-size: 11px;
   color: var(--theme-text-muted);
@@ -1395,24 +1401,24 @@ onUnmounted(() => {
 }
 
 .nm-trend-body {
-  padding: 0 14px 12px;
+  padding: 0 var(--theme-space-4) var(--theme-space-3);
 }
 
 /* Section */
 .nm-section {
-  margin-bottom: 16px;
+  margin-bottom: var(--theme-space-4);
 }
 
 .nm-section-title {
   display: flex;
-  margin-bottom: 10px;
+  margin-bottom: var(--theme-space-3);
   font-family: var(--theme-font-display);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 1px;
   color: var(--theme-accent-primary);
   align-items: center;
-  gap: 8px;
+  gap: var(--theme-space-2);
 }
 
 .nm-section-title::after {
@@ -1441,7 +1447,7 @@ onUnmounted(() => {
 
 .nm-field {
   display: flex;
-  padding: 10px 14px;
+  padding: var(--theme-space-3) var(--theme-space-4);
   background: var(--theme-bg-card);
   flex-direction: column;
   gap: 2px;
@@ -1465,11 +1471,11 @@ onUnmounted(() => {
 .nm-peer-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 8px;
+  gap: var(--theme-space-2);
 }
 
 .nm-peer-card {
-  padding: 12px 14px;
+  padding: var(--theme-space-3) var(--theme-space-4);
   background: var(--theme-bg-tag);
   border: 1px solid var(--theme-border);
   border-radius: var(--theme-radius-lg);
@@ -1483,8 +1489,8 @@ onUnmounted(() => {
 
 .nmp-top {
   display: flex;
-  padding-bottom: 6px;
-  margin-bottom: 8px;
+  padding-bottom: var(--theme-space-2);
+  margin-bottom: var(--theme-space-2);
   border-bottom: 1px solid var(--theme-border-light);
   align-items: center;
   justify-content: space-between;
@@ -1506,7 +1512,7 @@ onUnmounted(() => {
 .nmp-detail {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: var(--theme-space-1);
 }
 
 .nmp-row {
@@ -1534,7 +1540,7 @@ onUnmounted(() => {
 
 /* 更新时间 */
 .nm-update-time {
-  padding-top: 8px;
+  padding-top: var(--theme-space-2);
   font-size: 10px;
   color: var(--theme-text-muted);
   text-align: right;
@@ -1548,7 +1554,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   height: 100%;
-  gap: 8px;
+  gap: var(--theme-space-2);
   opacity: 0.5;
 }
 
@@ -1567,8 +1573,8 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40px 0;
-  gap: 8px;
+  padding: var(--theme-space-10) 0;
+  gap: var(--theme-space-2);
   color: var(--theme-text-muted);
 }
 

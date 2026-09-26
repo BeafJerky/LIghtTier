@@ -25,7 +25,7 @@
           <!-- 标题栏（内联模式由所在页面承载标题与返回，不渲染） -->
           <div v-if="!inline" class="cd-header">
             <span class="cd-title">{{ title }}</span>
-            <button class="cd-close" @click="handleClose" title="关闭">
+            <button class="cd-close" @click="handleClose" :title="t('newCommon.close')">
               <svg
                 width="16"
                 height="16"
@@ -87,7 +87,10 @@ if (typeof window !== 'undefined') {
 
 <script setup lang="ts">
 import { computed, onUnmounted, ref, watch, nextTick } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { isAndroid } from '@/utils/platformUtil'
+
+const { t } = useI18n()
 
 const props = withDefaults(
   defineProps<{
@@ -212,7 +215,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 24px 0;
+  padding: var(--theme-space-5) var(--theme-space-6) 0;
   flex-shrink: 0;
 }
 
@@ -246,7 +249,7 @@ onUnmounted(() => {
   display: flex;
   height: 0;
   min-height: 0;
-  padding: 20px 28px 20px 24px;
+  padding: var(--theme-space-5) var(--theme-space-6);
   overflow-y: auto;
   flex: 1;
   flex-direction: column;
@@ -269,7 +272,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 24px;
+  padding: var(--theme-space-4) var(--theme-space-6);
   border-top: 1px solid var(--theme-border-light, #f5ede6);
   flex-shrink: 0;
 }

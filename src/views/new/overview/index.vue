@@ -312,14 +312,14 @@ onUnmounted(() => {
 
 .nd-queue-bar {
   display: flex;
-  padding: 10px 16px;
-  margin-bottom: 16px;
+  padding: var(--theme-space-3) var(--theme-space-4);
+  margin-bottom: var(--theme-space-4);
   background: color-mix(in srgb, var(--theme-accent-primary) 8%, transparent);
   border: 1.5px dashed color-mix(in srgb, var(--theme-accent-primary) 35%, transparent);
   border-radius: var(--theme-radius-lg);
   animation: ndQueueIn 0.3s var(--theme-ease-spring);
   align-items: center;
-  gap: 8px;
+  gap: var(--theme-space-2);
 }
 
 .nd-queue-icon {
@@ -353,8 +353,8 @@ onUnmounted(() => {
 }
 
 .nd-section {
-  padding: 20px;
-  margin-bottom: 16px;
+  padding: var(--theme-space-5);
+  margin-bottom: var(--theme-space-4);
   background: var(--theme-bg-card);
   border: 1.5px solid var(--theme-border);
   border-radius: var(--theme-radius-xl);
@@ -362,19 +362,19 @@ onUnmounted(() => {
 
 .nd-stats {
   display: flex;
-  gap: 14px;
+  gap: var(--theme-space-4);
 }
 
 .nd-stat-card {
   display: flex;
-  padding: 16px 18px;
+  padding: var(--theme-space-4);
   background: var(--theme-bg);
   border: 1.5px solid var(--theme-border-light);
   border-radius: var(--theme-radius-lg);
   transition: all 0.25s;
   flex: 1;
   align-items: center;
-  gap: 14px;
+  gap: var(--theme-space-4);
 }
 
 .nd-stat-card:hover {
@@ -429,12 +429,12 @@ onUnmounted(() => {
 .nd-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 12px;
+  gap: var(--theme-space-3);
   min-height: 100px;
 }
 
 .nd-config-card {
-  padding: 16px 18px;
+  padding: var(--theme-space-4);
   background: var(--theme-bg);
   border: 1.5px solid var(--theme-border-light);
   border-radius: var(--theme-radius-lg);
@@ -450,17 +450,17 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: var(--theme-space-2);
 }
 
 .ndc-top-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--theme-space-2);
 }
 
 .ndc-conflict-badge {
-  padding: 2px 8px;
+  padding: 2px var(--theme-space-2);
   font-size: 11px;
   color: var(--theme-color-danger);
   background: color-mix(in srgb, var(--theme-color-danger) 12%, transparent);
@@ -486,7 +486,7 @@ onUnmounted(() => {
 .ndc-status {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--theme-space-2);
 }
 
 .ndc-dot {
@@ -515,7 +515,7 @@ onUnmounted(() => {
 }
 
 .ndc-vip {
-  padding: 1px 8px;
+  padding: 1px var(--theme-space-2);
   font-family: var(--theme-font-display);
   font-size: 11px;
   color: var(--theme-accent-primary);
@@ -524,7 +524,7 @@ onUnmounted(() => {
 }
 
 .ndc-name {
-  margin-bottom: 6px;
+  margin-bottom: var(--theme-space-2);
   font-family: var(--theme-font-display);
   font-size: 15px;
   font-weight: 600;
@@ -534,11 +534,11 @@ onUnmounted(() => {
 .ndc-summary {
   display: flex;
   min-height: 14px;
-  margin-bottom: 10px;
+  margin-bottom: var(--theme-space-3);
   font-size: 11px;
   color: var(--theme-text-muted);
   align-items: center;
-  gap: 4px;
+  gap: var(--theme-space-1);
 }
 
 .ndc-summary::first-letter {
@@ -547,11 +547,11 @@ onUnmounted(() => {
 
 .ndc-actions {
   display: flex;
-  gap: 8px;
+  gap: var(--theme-space-2);
 }
 
 .ndc-btn {
-  padding: 5px 18px;
+  padding: var(--theme-space-1) var(--theme-space-4);
   font-family: var(--theme-font-body);
   font-size: 12px;
   font-weight: 500;
@@ -590,7 +590,7 @@ onUnmounted(() => {
 
 .nd-empty {
   display: flex;
-  padding: 40px 0;
+  padding: var(--theme-space-10) 0;
   font-size: 14px;
   color: var(--theme-text-muted);
   grid-column: 1 / -1;

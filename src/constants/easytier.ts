@@ -20,8 +20,9 @@ export const COOKIE_VALUE = '83077fe7-9171-43f9-906a-f7b95096db66'
 // export const MONITOR_LIST = 'https://easytier.linch.eu.org/api/getMonitorList'
 export const MONITOR_LIST = 'https://uptime.easytier.cn/api/nodes?page=1&per_page=50'
 export const CORE_INFO_API = 'https://api.github.com/repos/EasyTier/EasyTier/releases'
-// LightTier 发布仓库（“检查更新”功能读取此地址的 releases）
-export const MANAGER_REPO_URL = 'https://github.com/BeafJerky/LIghtTier/releases'
+// LightTier 仓库主页（“关于”页链接）与发布地址（“检查更新”读取 releases）
+export const MANAGER_REPO_HOME = 'https://github.com/BeafJerky/LIghtTier'
+export const MANAGER_REPO_URL = `${MANAGER_REPO_HOME}/releases`
 export const MANAGER_INFO_API = 'https://api.github.com/repos/BeafJerky/LIghtTier/releases'
 export const GITHUB_EASYTIER = 'https://github.com/EasyTier/EasyTier'
 export const GITHUB_DOWN_URL = '/releases/download'

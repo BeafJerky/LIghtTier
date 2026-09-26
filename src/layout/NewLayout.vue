@@ -3,7 +3,7 @@
     <!-- 自定义拖拽条（桌面端窗口控制；Android 隐藏） -->
     <div v-if="!isAndroidPlatform" class="nl-drag-bar" data-tauri-drag-region>
       <span class="nl-drag-title">LightTier</span>
-      <button class="nl-win-close" @click="closeWindow" title="关闭">
+      <button class="nl-win-close" @click="closeWindow" :title="t('newCommon.close')">
         <svg
           width="14"
           height="14"
@@ -25,9 +25,9 @@
           <span class="nl-brand">LightTier</span>
         </div>
 
-        <div class="nl-section-label">导航</div>
+        <div class="nl-section-label">{{ t('newLayout.sectionNav') }}</div>
 
-        <nav class="nl-menu" role="navigation" aria-label="主导航">
+        <nav class="nl-menu" role="navigation" :aria-label="t('newLayout.ariaMainNav')">
           <button
             v-for="item in menuItems"
             :key="item.fullPath"
@@ -78,7 +78,7 @@
                 </Transition>
               </div>
               <!-- 主题切换 -->
-              <button class="nl-action-btn" @click="openTheme" title="主题设置">
+              <button class="nl-action-btn" @click="openTheme" :title="t('newLayout.theme')">
                 <svg
                   width="14"
                   height="14"
@@ -100,10 +100,10 @@
             <div class="nl-user-avatar">C</div>
             <div class="nl-user-info">
               <span class="nl-user-name">LightTier</span>
-              <span class="nl-user-status">管理器</span>
+              <span class="nl-user-status">{{ t('newLayout.managerLabel') }}</span>
             </div>
             <!-- 设置 -->
-            <button class="nl-action-btn" @click="openSettings" title="设置">
+            <button class="nl-action-btn" @click="openSettings" :title="t('newSettings.settings')">
               <svg
                 width="14"
                 height="14"
@@ -150,7 +150,12 @@
                 <path d="M19 12H5M12 19l-7-7 7-7" />
               </svg>
             </button>
-            <button v-else class="nl-hamburger" @click="sidebarOpen = true" aria-label="打开菜单">
+            <button
+              v-else
+              class="nl-hamburger"
+              @click="sidebarOpen = true"
+              :aria-label="t('newLayout.ariaOpenMenu')"
+            >
               <svg
                 width="18"
                 height="18"
@@ -215,6 +220,7 @@ import ThemeDialog from '@/components/ThemeDialog/index.vue'
 import SettingsDialog from '@/components/SettingsDialog/index.vue'
 import FloatingMenu from '@/components/FloatingMenu/index.vue'
 import { restoreTheme } from '@/hooks/useExternalThemes'
+import { resolveDefaultTheme, useThemeLoader } from '@/hooks/useThemeLoader'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { isAndroid } from '@/utils/platformUtil'
 import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
@@ -222,6 +228,9 @@ import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 const { toasts } = useCreamToast()
 const { t } = useI18n()
 const isAndroidPlatform = isAndroid()
+const { watchSystemTheme } = useThemeLoader()
+// 系统深色偏好监听的取消函数（onBeforeUnmount 释放）
+let stopSystemThemeWatch: (() => void) | null = null
 const themeDialogVisible = ref(false)
 const settingsDialogVisible = ref(false)
 
@@ -323,10 +332,13 @@ const closeWindow = () => {
 onMounted(() => {
   document.addEventListener('click', handleOutsideClick)
   const saved = localStorage.getItem('theme')
-  // 主题初始水合：仅在页面尚未设置 data-theme 时按存储恢复（避免闪烁）
+  // 主题初始水合：仅在页面尚未设置 data-theme 时兜底恢复
+  //（index.html 已按「存储 > 系统深色偏好」预设，此处避免遗漏导致无主题）
   if (!document.documentElement.getAttribute('data-theme')) {
-    document.documentElement.setAttribute('data-theme', saved || 'cream')
+    document.documentElement.setAttribute('data-theme', resolveDefaultTheme())
   }
+  // 用户未显式选择主题时，跟随系统深色偏好实时切换
+  stopSystemThemeWatch = watchSystemTheme()
   // 外部主题需异步读取 css 文件后再恢复
   if (saved && saved !== 'cream' && saved !== 'dark') {
     restoreTheme().catch(() => {})
@@ -339,6 +351,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleOutsideClick)
+  stopSystemThemeWatch?.()
 })
 </script>
 
@@ -353,7 +366,7 @@ onBeforeUnmount(() => {
 .nl-drag-bar {
   display: flex;
   height: 28px;
-  padding: 0 8px 0 14px;
+  padding: 0 var(--theme-space-2) 0 var(--theme-space-4);
   background: var(--theme-bg);
   border-bottom: 1px solid var(--theme-border);
   flex-shrink: 0;
@@ -411,8 +424,8 @@ onBeforeUnmount(() => {
 .nl-sidebar-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 24px 20px 20px;
+  gap: var(--theme-space-3);
+  padding: var(--theme-space-6) var(--theme-space-5) var(--theme-space-5);
   border-bottom: 1px solid var(--theme-border);
 }
 
@@ -439,7 +452,7 @@ onBeforeUnmount(() => {
 }
 
 .nl-section-label {
-  padding: 20px 20px 8px;
+  padding: var(--theme-space-5) var(--theme-space-5) var(--theme-space-2);
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 2px;
@@ -450,7 +463,7 @@ onBeforeUnmount(() => {
 .nl-menu {
   display: flex;
   min-height: 0;
-  padding: 4px 10px;
+  padding: var(--theme-space-1) var(--theme-space-3);
   overflow-y: auto;
   flex: 1;
   flex-direction: column;
@@ -461,7 +474,7 @@ onBeforeUnmount(() => {
   position: relative;
   display: flex;
   width: 100%;
-  padding: 10px 14px;
+  padding: var(--theme-space-3) var(--theme-space-4);
   font-family: var(--theme-font-body);
   font-size: 14px;
   color: var(--theme-text-secondary);
@@ -472,7 +485,7 @@ onBeforeUnmount(() => {
   border-radius: var(--theme-radius-md);
   transition: all var(--theme-duration) var(--theme-ease-spring);
   align-items: center;
-  gap: 10px;
+  gap: var(--theme-space-3);
 }
 
 .nl-menu-item:hover {
@@ -520,7 +533,7 @@ onBeforeUnmount(() => {
 
 .nl-sidebar-footer {
   display: flex;
-  padding: 10px 16px 14px;
+  padding: var(--theme-space-3) var(--theme-space-4) var(--theme-space-4);
   border-top: 1px solid var(--theme-border);
   flex-direction: column;
   gap: 0;
@@ -545,7 +558,7 @@ onBeforeUnmount(() => {
 .nl-user {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--theme-space-3);
 }
 
 .nl-user .nl-action-btn {
@@ -595,7 +608,7 @@ onBeforeUnmount(() => {
 .nl-lang-option {
   display: flex;
   width: 100%;
-  padding: 6px 12px;
+  padding: var(--theme-space-2) var(--theme-space-3);
   font-family: var(--theme-font-body);
   font-size: 12px;
   font-weight: 500;
@@ -683,7 +696,7 @@ onBeforeUnmount(() => {
   display: none;
   width: 32px;
   height: 32px;
-  margin-right: 10px;
+  margin-right: var(--theme-space-3);
   color: var(--theme-text-secondary);
   cursor: pointer;
   background: transparent;
@@ -704,7 +717,7 @@ onBeforeUnmount(() => {
   display: flex;
   width: 32px;
   height: 32px;
-  margin-right: 10px;
+  margin-right: var(--theme-space-3);
   color: var(--theme-text-secondary);
   cursor: pointer;
   background: transparent;
@@ -814,8 +827,8 @@ onBeforeUnmount(() => {
 
 .nl-btn-back {
   display: flex;
-  padding: 6px 16px;
-  margin-left: 8px;
+  padding: var(--theme-space-2) var(--theme-space-4);
+  margin-left: var(--theme-space-2);
   font-family: var(--theme-font-body);
   font-size: 12px;
   font-weight: 500;
@@ -826,7 +839,7 @@ onBeforeUnmount(() => {
   border-radius: var(--theme-radius-pill);
   transition: all 0.25s;
   align-items: center;
-  gap: 6px;
+  gap: var(--theme-space-2);
 }
 
 .nl-btn-back:hover {
@@ -838,7 +851,7 @@ onBeforeUnmount(() => {
 /* 内容区 */
 .nl-content {
   min-height: 0;
-  padding: 24px;
+  padding: var(--theme-space-6);
   overflow-y: auto;
   flex: 1;
 }
@@ -865,7 +878,7 @@ onBeforeUnmount(() => {
   }
 
   .nl-toolbar {
-    padding: 0 16px;
+    padding: 0 var(--theme-space-4);
   }
 
   .nl-page-subtitle {
@@ -873,7 +886,7 @@ onBeforeUnmount(() => {
   }
 
   .nl-content {
-    padding: 16px;
+    padding: var(--theme-space-4);
   }
 }
 
@@ -903,7 +916,7 @@ onBeforeUnmount(() => {
 }
 
 .cream-toast {
-  padding: 12px 28px;
+  padding: var(--theme-space-3) var(--theme-space-6);
   font-family: var(--theme-font-body);
   font-size: 13px;
   font-weight: 500;

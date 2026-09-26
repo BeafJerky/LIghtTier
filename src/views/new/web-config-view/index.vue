@@ -701,7 +701,7 @@ onUnmounted(() => {
 <style scoped>
 .nwc-root {
   display: flex;
-  gap: 16px;
+  gap: var(--theme-space-4);
   height: 100%;
   min-height: 0;
   font-family: var(--theme-font-body);
@@ -713,11 +713,11 @@ onUnmounted(() => {
   min-height: 0;
   flex-shrink: 0;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--theme-space-2);
 }
 
 .nwc-left-label {
-  padding: 0 4px;
+  padding: 0 var(--theme-space-1);
   font-family: var(--theme-font-display);
   font-size: 11px;
   font-weight: 500;
@@ -730,13 +730,13 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 4px;
+  padding: 0 var(--theme-space-1);
 }
 
 .nwc-left-btns {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--theme-space-1);
 }
 
 .nwc-add-btn {
@@ -765,17 +765,17 @@ onUnmounted(() => {
 .nwc-left-scroll {
   display: flex;
   min-height: 0;
-  padding: 12px;
+  padding: var(--theme-space-3);
   overflow-y: auto;
   background: var(--theme-bg-tag);
   border-radius: var(--theme-radius-md);
   flex: 1;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--theme-space-3);
 }
 
 .nwc-card {
-  padding: 14px 16px;
+  padding: var(--theme-space-4);
   overflow: hidden;
   cursor: pointer;
   background: var(--theme-bg-card);
@@ -799,13 +799,13 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 4px;
+  margin-bottom: var(--theme-space-1);
 }
 
 .nwc-card-status {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: var(--theme-space-1);
 }
 
 .nwc-dot {
@@ -841,18 +841,18 @@ onUnmounted(() => {
 }
 
 .nwc-card-sub {
-  margin-bottom: 10px;
+  margin-bottom: var(--theme-space-3);
   font-size: 11px;
   color: var(--theme-text-muted);
 }
 
 .nwc-card-actions {
   display: flex;
-  gap: 6px;
+  gap: var(--theme-space-2);
 }
 
 .nwc-btn {
-  padding: 4px 16px;
+  padding: var(--theme-space-1) var(--theme-space-4);
   font-family: var(--theme-font-body);
   font-size: 11px;
   font-weight: 500;
@@ -888,7 +888,7 @@ onUnmounted(() => {
 
 .nwc-right {
   min-height: 0;
-  padding: 20px 22px;
+  padding: var(--theme-space-5) var(--theme-space-6);
   overflow-y: auto;
   background: var(--theme-bg-card);
   border: 1.5px solid var(--theme-border);
@@ -899,7 +899,7 @@ onUnmounted(() => {
 /* 移动端返回按钮（默认隐藏，仅窄屏在详情头部展示） */
 .nwc-back-btn {
   display: none;
-  padding: 5px 12px;
+  padding: var(--theme-space-1) var(--theme-space-3);
   font-family: var(--theme-font-body);
   font-size: 12px;
   font-weight: 500;
@@ -911,7 +911,7 @@ onUnmounted(() => {
   border-radius: var(--theme-radius-pill);
   transition: all 0.2s;
   align-items: center;
-  gap: 6px;
+  gap: var(--theme-space-2);
 }
 
 .nwc-back-btn:hover {
@@ -942,7 +942,7 @@ onUnmounted(() => {
 
   .nwc-right {
     flex: 1;
-    padding: 14px 16px;
+    padding: var(--theme-space-4);
   }
 
   .nwc-back-btn {
@@ -952,7 +952,7 @@ onUnmounted(() => {
   /* 详情头部允许换行，避免标题与按钮组互挤导致标题竖排/按钮溢出 */
   .nwc-detail-header {
     flex-wrap: wrap;
-    gap: 10px;
+    gap: var(--theme-space-3);
   }
 
   .nwc-detail-title-row {
@@ -978,8 +978,8 @@ onUnmounted(() => {
 
 .nwc-detail-header {
   display: flex;
-  padding-bottom: 14px;
-  margin-bottom: 16px;
+  padding-bottom: var(--theme-space-4);
+  margin-bottom: var(--theme-space-4);
   border-bottom: 2px solid var(--theme-border-light);
   align-items: center;
   justify-content: space-between;
@@ -988,7 +988,7 @@ onUnmounted(() => {
 .nwc-detail-title-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--theme-space-3);
 }
 
 .nwc-detail-title {
@@ -1000,7 +1000,7 @@ onUnmounted(() => {
 }
 
 .nwc-badge {
-  padding: 2px 12px;
+  padding: 2px var(--theme-space-3);
   font-family: var(--theme-font-body);
   font-size: 10px;
   border-radius: var(--theme-radius-pill);
@@ -1020,11 +1020,11 @@ onUnmounted(() => {
 
 .nwc-detail-actions {
   display: flex;
-  gap: 8px;
+  gap: var(--theme-space-2);
 }
 
 .nwc-btn-lg {
-  padding: 6px 20px;
+  padding: var(--theme-space-2) var(--theme-space-5);
   font-family: var(--theme-font-body);
   font-size: 12px;
   font-weight: 500;
@@ -1082,19 +1082,19 @@ onUnmounted(() => {
 }
 
 .nwc-section {
-  margin-bottom: 16px;
+  margin-bottom: var(--theme-space-4);
 }
 
 .nwc-section-title {
   display: flex;
-  margin-bottom: 10px;
+  margin-bottom: var(--theme-space-3);
   font-family: var(--theme-font-display);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 1px;
   color: var(--theme-accent-primary);
   align-items: center;
-  gap: 8px;
+  gap: var(--theme-space-2);
 }
 
 .nwc-section-title::after {
@@ -1116,7 +1116,7 @@ onUnmounted(() => {
 
 .nwc-field {
   display: flex;
-  padding: 10px 14px;
+  padding: var(--theme-space-3) var(--theme-space-4);
   background: var(--theme-bg-card);
   flex-direction: column;
   gap: 2px;
@@ -1152,7 +1152,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   height: 100%;
-  gap: 8px;
+  gap: var(--theme-space-2);
   opacity: 0.5;
 }
 
@@ -1171,8 +1171,8 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40px 0;
-  gap: 8px;
+  padding: var(--theme-space-10) 0;
+  gap: var(--theme-space-2);
   color: var(--theme-text-muted);
 }
 
@@ -1184,7 +1184,7 @@ onUnmounted(() => {
 /* 服务管理 */
 .nwc-svc-bar {
   display: flex;
-  padding: 12px 16px;
+  padding: var(--theme-space-3) var(--theme-space-4);
   background: var(--theme-bg-tag);
   border: 1.5px solid var(--theme-border-light);
   border-radius: var(--theme-radius-md);
@@ -1195,7 +1195,7 @@ onUnmounted(() => {
 .nwc-svc-status {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--theme-space-2);
 }
 
 .nwc-svc-dot {
@@ -1240,11 +1240,11 @@ onUnmounted(() => {
 
 .nwc-svc-actions {
   display: flex;
-  gap: 6px;
+  gap: var(--theme-space-2);
 }
 
 .nwc-btn-sm {
-  padding: 4px 14px;
+  padding: var(--theme-space-1) var(--theme-space-4);
   font-family: var(--theme-font-body);
   font-size: 11px;
   font-weight: 500;
@@ -1255,7 +1255,7 @@ onUnmounted(() => {
 }
 
 .nwc-btn-svc-install {
-  padding: 6px 18px;
+  padding: var(--theme-space-2) var(--theme-space-4);
   font-family: var(--theme-font-body);
   font-size: 12px;
   font-weight: 500;
@@ -1311,18 +1311,18 @@ onUnmounted(() => {
 .nwc-svc-form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--theme-space-4);
 }
 
 .nwc-svc-field {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--theme-space-1);
 }
 
 .nwc-svc-radio-group {
   display: flex;
-  gap: 12px;
+  gap: var(--theme-space-3);
 }
 
 /* 复用 wcf-* 样式（原定义在 WebConfigForm.vue scoped 中，跨组件不生效） */
@@ -1335,7 +1335,7 @@ onUnmounted(() => {
 }
 
 .wcf-input {
-  padding: 8px 14px;
+  padding: var(--theme-space-2) var(--theme-space-4);
   font-family: var(--theme-font-body, 'Sora', sans-serif);
   font-size: 13px;
   color: var(--theme-text-primary, #4a3728);
@@ -1352,7 +1352,7 @@ onUnmounted(() => {
 
 .wcf-radio {
   display: inline-flex;
-  padding: 6px 16px;
+  padding: var(--theme-space-2) var(--theme-space-4);
   font-size: 13px;
   color: var(--theme-text-secondary, #7a6e5e);
   cursor: pointer;
@@ -1361,7 +1361,7 @@ onUnmounted(() => {
   border-radius: var(--theme-radius-pill, 100px);
   transition: all 0.2s;
   align-items: center;
-  gap: 6px;
+  gap: var(--theme-space-2);
 }
 
 .wcf-radio:hover {
@@ -1396,7 +1396,7 @@ onUnmounted(() => {
 }
 
 .wcf-footer-hint {
-  padding: 8px 12px;
+  padding: var(--theme-space-2) var(--theme-space-3);
   margin: 0;
   font-size: 11px;
   line-height: 1.5;
@@ -1407,7 +1407,7 @@ onUnmounted(() => {
 
 /* 确认弹窗 */
 .cfm-msg {
-  padding: 4px 0 0;
+  padding: var(--theme-space-1) 0 0;
   font-size: 13px;
   line-height: 1.6;
   color: var(--theme-text-secondary);
@@ -1416,13 +1416,13 @@ onUnmounted(() => {
 .cfm-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  margin-top: 18px;
+  gap: var(--theme-space-3);
+  margin-top: var(--theme-space-4);
 }
 
 .nwc-btn-cfm {
-  padding: 6px 16px;
-  margin-left: 8px;
+  padding: var(--theme-space-2) var(--theme-space-4);
+  margin-left: var(--theme-space-2);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;

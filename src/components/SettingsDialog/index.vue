@@ -542,12 +542,7 @@
             </div>
           </div>
           <div class="sd-about-links">
-            <a
-              class="sd-about-link"
-              href="https://github.com/your-github-org/lighttier"
-              target="_blank"
-              rel="noopener"
-            >
+            <a class="sd-about-link" :href="MANAGER_REPO_HOME" target="_blank" rel="noopener">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                 <path
                   d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
@@ -574,7 +569,7 @@
             <span class="sd-about-core-ver">{{ coreVersion }}</span>
           </div>
 
-          <!-- 检查更新（5.11）：入口暂隐藏，自有仓库就绪后开放（UPDATE_CHECK_ENABLED） -->
+          <!-- 检查更新（5.11）：入口暂隐藏，GitHub 发布首个 Release 后开放（UPDATE_CHECK_ENABLED） -->
           <div v-if="UPDATE_CHECK_ENABLED" class="sd-row">
             <div class="sd-row-info">
               <span class="sd-row-title">{{ t('newSettings.checkUpdate') }}</span>
@@ -672,7 +667,8 @@ import {
   EASYTIER_NAME,
   DEFAULT_VER_OPTIONS,
   BUILTIN_CORE_VERSION,
-  MANAGER_REPO_URL
+  MANAGER_REPO_URL,
+  MANAGER_REPO_HOME
 } from '@/constants/easytier'
 import { open as openUrl } from '@tauri-apps/plugin-shell'
 import { resourceDir, join } from '@tauri-apps/api/path'
@@ -746,8 +742,9 @@ const handleClearLockPassword = () => {
 }
 
 // 关于：检查更新（5.11，版本基准用 getAppVersion() 权威值）
-// 开关：当前发布仓库地址仍为占位（your-github-org/lighttier），检测结果无参考意义，入口暂时隐藏；
-// 待自有仓库就绪后改为 true 开放（请求与 UI 代码均已就绪）
+// 开关：仓库地址已就绪（BeafJerky/LIghtTier），但 GitHub 上尚未发布 Release，
+// releases 接口返回空列表会被下方逻辑判为检查失败，故入口暂时隐藏；
+// 发布首个 Release 后改为 true 开放（请求与 UI 代码均已就绪）
 const UPDATE_CHECK_ENABLED = false
 
 const checkingUpdate = ref(false)
@@ -1140,7 +1137,7 @@ const handleInstallCore = async () => {
 <style scoped>
 .sd-body {
   display: flex;
-  gap: 16px;
+  gap: var(--theme-space-4);
   min-height: 0;
   flex: 1;
 }
@@ -1150,7 +1147,7 @@ const handleInstallCore = async () => {
   display: flex;
   width: 140px;
   min-height: 0;
-  padding: 12px;
+  padding: var(--theme-space-3);
   overflow-y: auto;
   background: var(--theme-bg-card, #fff);
   border: 1px solid var(--theme-border-light, #f5ede6);
@@ -1176,7 +1173,7 @@ const handleInstallCore = async () => {
 .sd-nav-item {
   display: flex;
   width: 100%;
-  padding: 8px 10px;
+  padding: var(--theme-space-2) var(--theme-space-3);
   font-family: var(--theme-font-body, 'Sora', sans-serif);
   font-size: 13px;
   font-weight: 500;
@@ -1188,7 +1185,7 @@ const handleInstallCore = async () => {
   border-radius: var(--theme-radius-md, 10px);
   transition: all 0.15s;
   align-items: center;
-  gap: 8px;
+  gap: var(--theme-space-2);
 }
 
 .sd-nav-item:hover {
@@ -1222,7 +1219,7 @@ const handleInstallCore = async () => {
 .sd-content {
   min-width: 0;
   min-height: 0;
-  padding: 12px 16px 12px 12px;
+  padding: var(--theme-space-3) var(--theme-space-4) var(--theme-space-3) var(--theme-space-3);
   overflow-y: auto;
   background: var(--theme-bg-card, #fff);
   border: 1px solid var(--theme-border-light, #f5ede6);
@@ -1254,9 +1251,9 @@ const handleInstallCore = async () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 0;
+  padding: var(--theme-space-3) 0;
   border-bottom: 1px solid var(--theme-border-light, #f5ede6);
-  gap: 12px;
+  gap: var(--theme-space-3);
 }
 
 .sd-row:last-child {
@@ -1288,20 +1285,20 @@ const handleInstallCore = async () => {
 .sd-mirror-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 6px 0 10px;
+  gap: var(--theme-space-2);
+  padding: var(--theme-space-2) 0 var(--theme-space-3);
 }
 
 .sd-mirror-item {
   display: flex;
-  padding: 8px 12px;
+  padding: var(--theme-space-2) var(--theme-space-3);
   cursor: pointer;
   background: var(--theme-bg-tag, rgb(245 237 230 / 50%));
   border: 1.5px solid var(--theme-border-light, #f5ede6);
   border-radius: var(--theme-radius-md, 12px);
   transition: border-color 0.15s;
   align-items: center;
-  gap: 10px;
+  gap: var(--theme-space-3);
 }
 
 .sd-mirror-item.active {
@@ -1408,7 +1405,7 @@ const handleInstallCore = async () => {
 /* 数字输入 */
 .sd-number {
   width: 72px;
-  padding: 5px 8px;
+  padding: var(--theme-space-1) var(--theme-space-2);
   font-family: var(--theme-font-body, 'Sora', sans-serif);
   font-size: 13px;
   color: var(--theme-text-primary, #4a3728);
@@ -1427,7 +1424,7 @@ const handleInstallCore = async () => {
 
 /* 下拉选择 */
 .sd-select {
-  padding: 5px 24px 5px 10px;
+  padding: var(--theme-space-1) var(--theme-space-6) var(--theme-space-1) var(--theme-space-3);
   font-family: var(--theme-font-body, 'Sora', sans-serif);
   font-size: 12px;
   color: var(--theme-text-primary, #4a3728);
@@ -1457,7 +1454,7 @@ const handleInstallCore = async () => {
 .sd-select-trigger {
   display: flex;
   min-width: 130px;
-  padding: 5px 10px;
+  padding: var(--theme-space-1) var(--theme-space-3);
   font-family: var(--theme-font-body, 'Sora', sans-serif);
   font-size: 12px;
   color: var(--theme-text-primary, #4a3728);
@@ -1467,7 +1464,7 @@ const handleInstallCore = async () => {
   border-radius: var(--theme-radius-pill, 100px);
   transition: border-color 0.15s;
   align-items: center;
-  gap: 6px;
+  gap: var(--theme-space-2);
 }
 
 .sd-select-trigger:hover {
@@ -1486,7 +1483,7 @@ const handleInstallCore = async () => {
 
 .sd-select-dropdown {
   max-height: 160px;
-  padding: 4px;
+  padding: var(--theme-space-1);
   overflow-y: auto;
   background: var(--theme-bg-card, #fff);
   border: 1px solid var(--theme-border, #ede4db);
@@ -1512,7 +1509,7 @@ const handleInstallCore = async () => {
 }
 
 .sd-select-option {
-  padding: 6px 10px;
+  padding: var(--theme-space-2) var(--theme-space-3);
   font-size: 12px;
   color: var(--theme-text-secondary, #7a6e5e);
   white-space: nowrap;
@@ -1537,8 +1534,8 @@ const handleInstallCore = async () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 12px 0 8px;
+  gap: var(--theme-space-3);
+  padding: var(--theme-space-3) 0 var(--theme-space-2);
   text-align: center;
 }
 
@@ -1554,7 +1551,7 @@ const handleInstallCore = async () => {
 
 /* 数据管理按钮 */
 .sd-btn {
-  padding: 6px 16px;
+  padding: var(--theme-space-2) var(--theme-space-4);
   font-family: var(--theme-font-body, 'Sora', sans-serif);
   font-size: 13px;
   font-weight: 500;
@@ -1611,7 +1608,7 @@ const handleInstallCore = async () => {
 
 .sd-btn-group {
   display: flex;
-  gap: 8px;
+  gap: var(--theme-space-2);
   flex-shrink: 0;
 }
 
@@ -1619,12 +1616,12 @@ const handleInstallCore = async () => {
 .sd-core-ver-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--theme-space-2);
   flex-shrink: 0;
 }
 
 .sd-core-ver-tag {
-  padding: 2px 10px;
+  padding: 2px var(--theme-space-3);
   font-family: var(--theme-font-body, 'Sora', sans-serif);
   font-size: 12px;
   color: var(--theme-text-muted, #c8bdb2);
@@ -1645,12 +1642,12 @@ const handleInstallCore = async () => {
 
 .sd-core-install {
   display: flex;
-  padding: 12px;
-  margin-top: 12px;
+  padding: var(--theme-space-3);
+  margin-top: var(--theme-space-3);
   background: var(--theme-bg-hover, rgb(232 160 160 / 6%));
   border-radius: var(--theme-radius-md, 10px);
   flex-direction: column;
-  gap: 10px;
+  gap: var(--theme-space-3);
 }
 
 .sd-core-install-title {
@@ -1668,18 +1665,18 @@ const handleInstallCore = async () => {
 .sd-core-install-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--theme-space-2);
   flex-wrap: wrap;
 }
 
 /* 关于页 */
 .sd-about {
   display: flex;
-  padding: 16px 0;
-  margin-bottom: 8px;
+  padding: var(--theme-space-4) 0;
+  margin-bottom: var(--theme-space-2);
   border-bottom: 1px solid var(--theme-border-light, #f5ede6);
   align-items: center;
-  gap: 14px;
+  gap: var(--theme-space-4);
 }
 
 .sd-about-logo {
@@ -1722,15 +1719,15 @@ const handleInstallCore = async () => {
 
 .sd-about-links {
   display: flex;
-  padding: 8px 0;
-  margin-bottom: 8px;
+  padding: var(--theme-space-2) 0;
+  margin-bottom: var(--theme-space-2);
   border-bottom: 1px solid var(--theme-border-light, #f5ede6);
-  gap: 8px;
+  gap: var(--theme-space-2);
 }
 
 .sd-about-link {
   display: flex;
-  padding: 6px 12px;
+  padding: var(--theme-space-2) var(--theme-space-3);
   font-size: 12px;
   color: var(--theme-text-secondary, #7a6e5e);
   text-decoration: none;
@@ -1738,7 +1735,7 @@ const handleInstallCore = async () => {
   border-radius: var(--theme-radius-sm, 6px);
   transition: all 0.15s;
   align-items: center;
-  gap: 6px;
+  gap: var(--theme-space-2);
 }
 
 .sd-about-link:hover {
@@ -1750,7 +1747,7 @@ const handleInstallCore = async () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 0;
+  padding: var(--theme-space-3) 0;
 }
 
 .sd-about-core-label {
@@ -1768,12 +1765,12 @@ const handleInstallCore = async () => {
 .sd-lock-wrap {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--theme-space-2);
   flex-shrink: 0;
 }
 
 .sd-lock-status {
-  padding: 2px 10px;
+  padding: 2px var(--theme-space-3);
   font-size: 11px;
   color: var(--theme-text-muted, #c8bdb2);
   white-space: nowrap;
@@ -1789,12 +1786,12 @@ const handleInstallCore = async () => {
 .sd-lock-input-bar {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--theme-space-1);
 }
 
 .sd-lock-input {
   width: 140px;
-  padding: 5px 10px;
+  padding: var(--theme-space-1) var(--theme-space-3);
   font-family: var(--theme-font-body, 'Sora', sans-serif);
   font-size: 12px;
   color: var(--theme-text-primary, #4a3728);
@@ -1832,14 +1829,14 @@ const handleInstallCore = async () => {
 @media (width <= 640px) {
   .sd-body {
     flex-direction: column;
-    gap: 10px;
+    gap: var(--theme-space-3);
   }
 
   .sd-nav {
     width: 100%;
     flex-direction: row;
-    gap: 4px;
-    padding: 8px;
+    gap: var(--theme-space-1);
+    padding: var(--theme-space-2);
     overflow: auto hidden;
     scrollbar-width: none;
   }
@@ -1854,7 +1851,7 @@ const handleInstallCore = async () => {
   }
 
   .sd-content {
-    padding: 12px;
+    padding: var(--theme-space-3);
   }
 
   /* 行内控件过宽时允许换行，避免挤压描述文案 */

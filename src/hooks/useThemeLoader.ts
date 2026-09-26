@@ -4,10 +4,30 @@
  * - 内置主题通过 data-theme 属性生效（cream / dark 由 CSS 变量定义）
  * - 外部主题（resource/themes/*.css）注入 <style id="custom-theme"> 后生效
  * - currentTheme 为模块级单例，多个组件共享同一主题状态
+ * - 默认主题跟随系统深色偏好：用户未显式选择（localStorage 无 theme）时，
+ *   系统深色 → dark，否则 cream；用户手动选择后持久化并优先
  */
 import { ref } from 'vue'
 
-const currentTheme = ref('cream')
+/** 系统是否偏好深色（非浏览器环境恒为 false） */
+const prefersDark = (): boolean => {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
+}
+
+/** 读取用户显式选择的主题名（非浏览器环境为 null） */
+const readSavedTheme = (): string | null => {
+  if (typeof localStorage === 'undefined') return null
+  return localStorage.getItem('theme')
+}
+
+/** 系统偏好推导出的默认主题（不含用户显式选择） */
+export const systemDefaultTheme = (): string => (prefersDark() ? 'dark' : 'cream')
+
+/** 解析默认主题：显式选择 > 系统深色偏好 > cream */
+export const resolveDefaultTheme = (): string => readSavedTheme() || systemDefaultTheme()
+
+const currentTheme = ref(resolveDefaultTheme())
 
 export const useThemeLoader = () => {
   // 注入外部主题样式（先移除旧的，保证单实例）
@@ -36,13 +56,44 @@ export const useThemeLoader = () => {
     document.documentElement.setAttribute('data-theme', name)
   }
 
-  // 重置回默认主题（清理存储与注入的样式）
-  const resetTheme = () => {
-    localStorage.removeItem('theme')
+  // 切换内置主题（不写 localStorage：用于「跟随系统」场景，避免被当成用户显式选择）
+  const setBuiltinTheme = (name: string) => {
     removeExternalTheme()
-    document.documentElement.setAttribute('data-theme', 'cream')
-    currentTheme.value = 'cream'
+    currentTheme.value = name
+    document.documentElement.setAttribute('data-theme', name)
   }
 
-  return { currentTheme, applyTheme, resetTheme, injectExternalTheme, removeExternalTheme }
+  // 重置回默认主题（清理存储与注入的样式）；返回实际生效的默认主题名
+  const resetTheme = (): string => {
+    localStorage.removeItem('theme')
+    const fallback = systemDefaultTheme()
+    setBuiltinTheme(fallback)
+    return fallback
+  }
+
+  /**
+   * 跟随系统深色偏好变化：仅在用户未显式选择主题时生效
+   * 返回取消监听函数（非浏览器环境返回 null）
+   */
+  const watchSystemTheme = (): (() => void) | null => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return null
+    const mq = window.matchMedia('(prefers-color-scheme: dark)')
+    const onChange = (e: MediaQueryListEvent) => {
+      // 用户已手动选过主题：不再跟随系统，尊重显式选择
+      if (readSavedTheme()) return
+      setBuiltinTheme(e.matches ? 'dark' : 'cream')
+    }
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }
+
+  return {
+    currentTheme,
+    applyTheme,
+    resetTheme,
+    setBuiltinTheme,
+    watchSystemTheme,
+    injectExternalTheme,
+    removeExternalTheme
+  }
 }
