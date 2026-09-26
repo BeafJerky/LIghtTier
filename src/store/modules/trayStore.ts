@@ -5,6 +5,7 @@ import { TrayIcon } from '@tauri-apps/api/tray'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { saveWindowState, StateFlags } from '@tauri-apps/plugin-window-state'
 import { defineStore } from 'pinia'
+import { t } from '@/utils/i18nUtil'
 
 /**
  * 系统托盘状态（Windows 桌面专属）
@@ -130,21 +131,22 @@ export const useTrayStore = defineStore(
       }
     }
 
-    // 右键菜单配置
-    const menuItems = {
-      items: [
-        {
-          id: 'open',
-          text: '显示 / 隐藏',
-          action: toggleVisibility
-        },
-        {
-          id: 'quit',
-          text: '退出',
-          action: onQuit
-        }
-      ]
-    }
+    // 右键菜单配置（文案随当前语言）
+    const buildMenu = () =>
+      Menu.new({
+        items: [
+          {
+            id: 'open',
+            text: t('newCommon.trayShowHide'),
+            action: toggleVisibility
+          },
+          {
+            id: 'quit',
+            text: t('newCommon.trayQuit'),
+            action: onQuit
+          }
+        ]
+      })
     // 初始化托盘
     const initTray = async () => {
       // 声明后由下方分支赋值（初始值从未被读取，无需初始化）
@@ -153,13 +155,15 @@ export const useTrayStore = defineStore(
       try {
         tray = await getTray()
         if (tray) {
+          // 托盘已存在（如语言切换后的页面重载）：仅刷新菜单文案，避免残留旧语言
+          await tray.setMenu(await buildMenu())
           return
         }
       } catch (_error) {
         // 托盘不存在，继续创建
       }
       try {
-        const menu = await Menu.new(menuItems)
+        const menu = await buildMenu()
         const options = {
           id: DEFAULT_TRAY_NAME,
           title: pkg.displayName,

@@ -221,7 +221,7 @@
         </div>
 
         <div class="ed-form-section" v-if="formFlagsKeys.length">
-          <div class="ed-form-section-title">Flags</div>
+          <div class="ed-form-section-title">{{ t('newEdit.flagsSection') }}</div>
           <div class="ed-tag-list">
             <div class="ed-tag-row" v-for="(_, i) in formFlagsKeys" :key="'f' + i">
               <input
@@ -250,7 +250,7 @@
           <div class="ed-form-grid">
             <div class="ed-form-field" v-for="f in SECURITY_FIELD_DEFS" :key="f.key">
               <label class="ed-form-label" :title="f.tooltipKey ? t(f.tooltipKey) : f.key">{{
-                f.key
+                t(f.labelKey)
               }}</label>
               <div class="ed-secret-row">
                 <input
@@ -281,7 +281,7 @@
           <div class="ed-form-grid">
             <div class="ed-form-field" v-for="f in ADVANCED_FLAG_DEFS" :key="f.key">
               <label class="ed-form-label" :title="f.tooltipKey ? t(f.tooltipKey) : f.key">{{
-                f.key
+                t(f.labelKey)
               }}</label>
               <div class="ed-form-switch-wrap">
                 <span
@@ -299,13 +299,13 @@
             </div>
             <div class="ed-form-field" v-for="f in ADVANCED_TEXT_DEFS" :key="f.key">
               <label class="ed-form-label" :title="f.tooltipKey ? t(f.tooltipKey) : f.key">{{
-                f.key
+                t(f.labelKey)
               }}</label>
               <input class="ed-form-input" v-model="advFlags[f.key]" :placeholder="f.key" />
             </div>
             <div class="ed-form-field" v-for="f in ADVANCED_TOP_TEXT_DEFS" :key="f.key">
               <label class="ed-form-label" :title="f.tooltipKey ? t(f.tooltipKey) : f.key">{{
-                f.key
+                t(f.labelKey)
               }}</label>
               <input
                 v-if="f.key === 'stun_servers'"

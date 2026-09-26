@@ -16,6 +16,7 @@ import { getCliDir, getCoreDir, getResourceDir, readFileContent } from './fileUt
 import { getPlatform, sleep } from './sysUtil'
 import * as toml from 'smol-toml'
 import { clearExitRoute } from './routeUtil'
+import { t } from '@/utils/i18nUtil'
 
 // 启用 TargetKind::Webview 后，这个函数将把日志打印到浏览器控制台
 attachConsole()
@@ -667,8 +668,18 @@ export const installServiceOnWindows = async (
       const args2 = ['set', serviceName, 'AppParameters', `${args}`]
       const args3 = ['set', serviceName, 'AppDirectory', appDirectory]
       const args4 = ['set', serviceName, 'AppExit', 'Default', 'Restart']
-      const args5 = ['set', serviceName, 'Description', `EasyTier 组网,服务配置:${serviceName}`]
-      const args6 = ['set', serviceName, 'DisplayName', `EasyTier 组网 ${serviceName}`]
+      const args5 = [
+        'set',
+        serviceName,
+        'Description',
+        t('newConfig.svcDefaultDesc', { name: serviceName })
+      ]
+      const args6 = [
+        'set',
+        serviceName,
+        'DisplayName',
+        t('newConfig.svcDefaultName', { name: serviceName })
+      ]
 
       // 如果提供了用户名和密码，使用指定用户运行服务；否则使用 LocalSystem
       let args7: string[]

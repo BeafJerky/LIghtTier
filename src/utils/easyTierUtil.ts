@@ -9,6 +9,7 @@
  *    peer 数据后处理（processPeerData）与 TOML 配置清洗（normalizeToml，5.7）。
  */
 import defaultData from '@/constants/defaultData'
+import { t } from '@/utils/i18nUtil'
 
 /** 解析 `easytier-cli node` 表格文本为键值对象（形如 │ key │ value │ 的行） */
 export const parseNodeInfo = (content) => {
@@ -304,48 +305,48 @@ export const formatMetric = (val: string | number | null | undefined, unit: stri
 }
 
 /**
- * 路由开销类型转可读文本
+ * 路由开销类型转可读文本（文案随当前语言；比较时应与调用方使用同一函数保持一致性）
  */
 export const routeCost = (cost: string): string => {
   switch (cost) {
     case 'p2p':
-      return 'P2P直连'
+      return t('newMonitor.costP2p')
     case 'Local':
-      return '本地'
+      return t('newMonitor.costLocal')
     default:
-      return '中继'
+      return t('newMonitor.costRelay')
   }
 }
 
 /**
- * NAT 类型转可读文本
+ * NAT 类型转可读文本（文案随当前语言）
  */
 export const getNatType = (natType: any): string => {
   switch (natType) {
     case 3:
     case 'FullCone':
-      return '全锥形'
+      return t('newMonitor.natFullCone')
     case 4:
     case 'Restricted':
-      return '限制锥形'
+      return t('newMonitor.natRestricted')
     case 5:
     case 'PortRestricted':
-      return '端口限制锥形'
+      return t('newMonitor.natPortRestricted')
     case 6:
     case 'Symmetric':
-      return '对称型'
+      return t('newMonitor.natSymmetric')
     case 0:
     case 'Unknown':
-      return '未知'
+      return t('newMonitor.natUnknown')
     case 1:
     case 'OpenInternet':
-      return '公网'
+      return t('newMonitor.natOpen')
     case 2:
     case 'NoPAT':
-      return '无PAT'
+      return t('newMonitor.natNoPat')
     case 7:
     case 'SymUdpFirewall':
-      return '对称UDP防火墙'
+      return t('newMonitor.natSymUdpFw')
     default:
       return String(natType)
   }
@@ -364,7 +365,7 @@ export const processPeerData = (peers: PeerInfo[]): PeerInfo[] => {
     if (ipv4.includes('/')) ipv4 = ipv4.split('/')[0]
     if (hostname.includes('PublicServer_')) {
       hostname = hostname.replace('PublicServer_', '')
-      ipv4 = '服务器'
+      ipv4 = t('newMonitor.serverLabel')
     }
     return {
       ...p,

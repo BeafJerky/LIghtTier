@@ -100,6 +100,7 @@ const defaultFormData: EasyTierFormData | any = {
 export interface AdvancedFieldDef {
   key: string
   type: 'text' | 'switch'
+  labelKey: string // i18n key，字段标签
   tooltipKey?: string // i18n key，title 属性挂 tooltip
   secret?: boolean // 敏感字段：回显掩码、保存写回原值
   filePick?: boolean // 文本输入行带 📁 选择按钮（Tauri 文件选择）
@@ -107,49 +108,154 @@ export interface AdvancedFieldDef {
 
 // 安全模式（顶层字段，文本输入）
 export const SECURITY_FIELD_DEFS: AdvancedFieldDef[] = [
-  { key: 'local_private_key', type: 'text', tooltipKey: 'newEdit.tipPrivateKey', secret: true },
-  { key: 'local_public_key', type: 'text', tooltipKey: 'newEdit.tipPublicKey' },
-  { key: 'credential', type: 'text', tooltipKey: 'newEdit.tipCredential', secret: true },
-  { key: 'credential_file', type: 'text', tooltipKey: 'newEdit.tipCredentialFile', filePick: true }
+  {
+    key: 'local_private_key',
+    type: 'text',
+    labelKey: 'newEdit.lblPrivateKey',
+    tooltipKey: 'newEdit.tipPrivateKey',
+    secret: true
+  },
+  {
+    key: 'local_public_key',
+    type: 'text',
+    labelKey: 'newEdit.lblPublicKey',
+    tooltipKey: 'newEdit.tipPublicKey'
+  },
+  {
+    key: 'credential',
+    type: 'text',
+    labelKey: 'newEdit.lblCredential',
+    tooltipKey: 'newEdit.tipCredential',
+    secret: true
+  },
+  {
+    key: 'credential_file',
+    type: 'text',
+    labelKey: 'newEdit.lblCredentialFile',
+    tooltipKey: 'newEdit.tipCredentialFile',
+    filePick: true
+  }
 ]
 
 // 高级选项（flags 内布尔开关，2 列网格）
 export const ADVANCED_FLAG_DEFS: AdvancedFieldDef[] = [
-  { key: 'disable_quic_input', type: 'switch', tooltipKey: 'newEdit.tipDisableQuicInput' },
-  { key: 'lazy_p2p', type: 'switch', tooltipKey: 'newEdit.tipLazyP2p' },
-  { key: 'need_p2p', type: 'switch', tooltipKey: 'newEdit.tipNeedP2p' },
-  { key: 'disable_upnp', type: 'switch', tooltipKey: 'newEdit.tipDisableUpnp' },
-  { key: 'no_listener', type: 'switch', tooltipKey: 'newEdit.tipNoListener' },
-  { key: 'enable_udp_broadcast_relay', type: 'switch', tooltipKey: 'newEdit.tipUdpBroadcastRelay' },
-  { key: 'disable_relay_kcp', type: 'switch', tooltipKey: 'newEdit.tipDisableRelayKcp' },
-  { key: 'disable_relay_quic', type: 'switch', tooltipKey: 'newEdit.tipDisableRelayQuic' },
+  {
+    key: 'disable_quic_input',
+    type: 'switch',
+    labelKey: 'newEdit.lblDisableQuicInput',
+    tooltipKey: 'newEdit.tipDisableQuicInput'
+  },
+  {
+    key: 'lazy_p2p',
+    type: 'switch',
+    labelKey: 'newEdit.lblLazyP2p',
+    tooltipKey: 'newEdit.tipLazyP2p'
+  },
+  {
+    key: 'need_p2p',
+    type: 'switch',
+    labelKey: 'newEdit.lblNeedP2p',
+    tooltipKey: 'newEdit.tipNeedP2p'
+  },
+  {
+    key: 'disable_upnp',
+    type: 'switch',
+    labelKey: 'newEdit.lblDisableUpnp',
+    tooltipKey: 'newEdit.tipDisableUpnp'
+  },
+  {
+    key: 'no_listener',
+    type: 'switch',
+    labelKey: 'newEdit.lblNoListener',
+    tooltipKey: 'newEdit.tipNoListener'
+  },
+  {
+    key: 'enable_udp_broadcast_relay',
+    type: 'switch',
+    labelKey: 'newEdit.lblUdpBroadcastRelay',
+    tooltipKey: 'newEdit.tipUdpBroadcastRelay'
+  },
+  {
+    key: 'disable_relay_kcp',
+    type: 'switch',
+    labelKey: 'newEdit.lblDisableRelayKcp',
+    tooltipKey: 'newEdit.tipDisableRelayKcp'
+  },
+  {
+    key: 'disable_relay_quic',
+    type: 'switch',
+    labelKey: 'newEdit.lblDisableRelayQuic',
+    tooltipKey: 'newEdit.tipDisableRelayQuic'
+  },
   {
     key: 'enable_relay_foreign_network_kcp',
     type: 'switch',
+    labelKey: 'newEdit.lblRelayForeignKcp',
     tooltipKey: 'newEdit.tipRelayForeignKcp'
   },
   {
     key: 'enable_relay_foreign_network_quic',
     type: 'switch',
+    labelKey: 'newEdit.lblRelayForeignQuic',
     tooltipKey: 'newEdit.tipRelayForeignQuic'
   },
-  { key: 'secure_mode', type: 'switch', tooltipKey: 'newEdit.tipSecureMode' },
-  { key: 'disable_sym_hole_punching', type: 'switch', tooltipKey: 'newEdit.tipDisableSymHole' },
-  { key: 'p2p_only', type: 'switch', tooltipKey: 'newEdit.tipP2pOnly' },
-  { key: 'ipv6_public_addr_auto', type: 'switch', tooltipKey: 'newEdit.tipIpv6Auto' },
-  { key: 'accept_dns', type: 'switch', tooltipKey: 'newEdit.tipAcceptDns' }
+  {
+    key: 'secure_mode',
+    type: 'switch',
+    labelKey: 'newEdit.lblSecureMode',
+    tooltipKey: 'newEdit.tipSecureMode'
+  },
+  {
+    key: 'disable_sym_hole_punching',
+    type: 'switch',
+    labelKey: 'newEdit.lblDisableSymHole',
+    tooltipKey: 'newEdit.tipDisableSymHole'
+  },
+  {
+    key: 'p2p_only',
+    type: 'switch',
+    labelKey: 'newEdit.lblP2pOnly',
+    tooltipKey: 'newEdit.tipP2pOnly'
+  },
+  {
+    key: 'ipv6_public_addr_auto',
+    type: 'switch',
+    labelKey: 'newEdit.lblIpv6Auto',
+    tooltipKey: 'newEdit.tipIpv6Auto'
+  },
+  {
+    key: 'accept_dns',
+    type: 'switch',
+    labelKey: 'newEdit.lblAcceptDns',
+    tooltipKey: 'newEdit.tipAcceptDns'
+  }
 ]
 
 // 高级选项（flags 内文本输入）
 export const ADVANCED_TEXT_DEFS: AdvancedFieldDef[] = [
-  { key: 'ipv6_public_addr_provider', type: 'text', tooltipKey: 'newEdit.tipIpv6Provider' },
-  { key: 'ipv6_public_addr_prefix', type: 'text', tooltipKey: 'newEdit.tipIpv6Prefix' }
+  {
+    key: 'ipv6_public_addr_provider',
+    type: 'text',
+    labelKey: 'newEdit.lblIpv6Provider',
+    tooltipKey: 'newEdit.tipIpv6Provider'
+  },
+  {
+    key: 'ipv6_public_addr_prefix',
+    type: 'text',
+    labelKey: 'newEdit.lblIpv6Prefix',
+    tooltipKey: 'newEdit.tipIpv6Prefix'
+  }
 ]
 
 // 高级选项（顶层文本输入）
 export const ADVANCED_TOP_TEXT_DEFS: AdvancedFieldDef[] = [
-  { key: 'socks5_proxy', type: 'text', tooltipKey: 'newEdit.tipSocks5' },
-  { key: 'stun_servers', type: 'text', tooltipKey: 'newEdit.tipStun' }
+  {
+    key: 'socks5_proxy',
+    type: 'text',
+    labelKey: 'newEdit.lblSocks5',
+    tooltipKey: 'newEdit.tipSocks5'
+  },
+  { key: 'stun_servers', type: 'text', labelKey: 'newEdit.lblStun', tooltipKey: 'newEdit.tipStun' }
 ]
 
 // 固定高级字段的全部 key（动态 Flags 编辑器需排除，避免同一 key 双处编辑）
@@ -210,6 +316,6 @@ const defaultFormWebData: FormWebData = {
   webStartMethod: 2,
   configFileName: '',
   webUrl: '',
-  status: '停止'
+  status: 'notRunning'
 }
 export default { defaultFormData, defaultFormWebData }

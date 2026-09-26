@@ -4,14 +4,15 @@
  * 直接读写原生值（内部统一 JSON 序列化）；读取时兼容旧版 {type, value} 包装格式。
  */
 export const useStorage = (type: 'sessionStorage' | 'localStorage' = 'sessionStorage') => {
-  const storage = window[type]
+  // 非浏览器环境（如 vitest node 环境）下降级为 null，读写均为空操作
+  const storage: Storage | null = typeof window !== 'undefined' ? window[type] : null
 
   const setStorage = (key: string, value: any) => {
-    storage.setItem(key, JSON.stringify(value))
+    storage?.setItem(key, JSON.stringify(value))
   }
 
   const getStorage = (key: string) => {
-    const raw = storage.getItem(key)
+    const raw = storage?.getItem(key)
     if (raw == null) return raw
     try {
       const parsed = JSON.parse(raw)
@@ -27,18 +28,18 @@ export const useStorage = (type: 'sessionStorage' | 'localStorage' = 'sessionSto
   }
 
   const removeStorage = (key: string) => {
-    storage.removeItem(key)
+    storage?.removeItem(key)
   }
 
   const clear = (excludes?: string[]) => {
     // 获取排除项
-    const keys = Object.keys(storage)
+    const keys = Object.keys(storage ?? {})
     const defaultExcludes = ['dynamicRouter', 'serverDynamicRouter']
     const excludesArr = excludes ? [...excludes, ...defaultExcludes] : defaultExcludes
     const excludesKeys = keys.filter((key) => !excludesArr.includes(key))
     // 排除项不清除
     excludesKeys.forEach((key) => {
-      storage.removeItem(key)
+      storage?.removeItem(key)
     })
   }
 

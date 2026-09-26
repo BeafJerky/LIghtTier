@@ -17,7 +17,12 @@ import {
   replaceLastWithZero,
   runEasyTierCli
 } from '@/utils/shellUtil'
-import { extractAllPublicIPs, processPeerData, readTextReverse } from '@/utils/easyTierUtil'
+import {
+  extractAllPublicIPs,
+  processPeerData,
+  readTextReverse,
+  routeCost
+} from '@/utils/easyTierUtil'
 import { deleteFileOrDir, listFiles, readFileContent, writeFileContent } from '@/utils/fileUtil'
 import { isAndroid } from '@/utils/platformUtil'
 import { LOG_PATH, RESOURCE_PATH } from '@/constants/easytier'
@@ -182,7 +187,7 @@ export const setExitRoute = async (
     /* peers 不可用 */
   }
 
-  const localNode = peers.find((v) => v.cost === '本地')
+  const localNode = peers.find((v) => v.cost === routeCost('Local'))
   const gatewayResult = await retryGet(getDefaultGateway)
   const gateway = typeof gatewayResult === 'string' ? gatewayResult : null
 
@@ -190,8 +195,8 @@ export const setExitRoute = async (
     if (peers.length === 0) return true // 无 peer 信息时直接尝试
     const hp = config.flags?.disable_udp_hole_punching
     const exitNode = peers.find((v) => v.ipv4 === exitNodeIp)
-    if (!hp && exitNode?.cost === 'P2P直连') return true
-    if (hp && exitNode?.cost === '中继') return true
+    if (!hp && exitNode?.cost === routeCost('p2p')) return true
+    if (hp && exitNode?.cost === routeCost('relay')) return true
     return false
   }
   const waitHole = await retryGet(waitHolePunching)
