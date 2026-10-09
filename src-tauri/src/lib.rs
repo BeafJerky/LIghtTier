@@ -1,5 +1,6 @@
 use chrono::Local;
 use serde_json::json;
+use std::fmt::Arguments;
 use std::sync::Arc;
 use tauri::Manager;
 // AppHandle 仅桌面端代码使用（show_window），Android 端全路径引用
@@ -12,12 +13,30 @@ use std::os::windows::process::CommandExt;
 // 子进程调用仅桌面端使用，移动端由进程内内核替代
 #[cfg(not(mobile))]
 use std::process::Command;
+use tauri_plugin_log::fern::FormatCallback;
 use tauri_plugin_log::{Target, TargetKind};
 use tauri_plugin_store::StoreExt;
+
+// Windows 平台：不创建控制台窗口的进程创建标志
+#[cfg(windows)]
+const CREATE_NO_WINDOW: u32 = 0x08000000;
 
 // Android 平台：进程内内核集成（实例管理 + 进程内 RPC + TUN fd 注入）
 #[cfg(target_os = "android")]
 pub mod android;
+
+/// 日志格式化公共函数：统一 tauri_plugin_log 的 format 闭包逻辑
+fn log_format(out: FormatCallback<'_>, message: &Arguments<'_>, record: &log::Record<'_>) {
+    let date = Local::now().format("%Y-%m-%d %H:%M:%S");
+    let target = record.target().split('@').next().unwrap_or(record.target());
+    out.finish(format_args!(
+        "{} {:<5} [{}]: {}",
+        date,
+        record.level(),
+        target,
+        message
+    ));
+}
 
 #[tauri::command]
 async fn check_cold_start(app: tauri::AppHandle) -> bool {
@@ -51,8 +70,6 @@ fn run_cli(program: String, args: Vec<String>) -> String {
     // 桌面端：通过子进程执行命令并捕获输出
     #[cfg(not(mobile))]
     {
-        // CREATE_NO_WINDOW: 不创建控制台窗口
-        const CREATE_NO_WINDOW: u32 = 0x08000000;
         // DETACHED_PROCESS: 使进程在后台运行
         // const DETACHED_PROCESS: u32 = 0x00000008;
         let mut cmd = Command::new(&program);
@@ -71,7 +88,7 @@ fn run_cli(program: String, args: Vec<String>) -> String {
                 }
             }
             Err(e) => {
-                println!("Failed to execute process: {}", e);
+                log::error!("Failed to execute process: {}", e);
                 format!("Error: {}", e) // 返回错误信息
             }
         };
@@ -90,8 +107,6 @@ fn run_command(program: String, args: Vec<String>) -> String {
     // 桌面端：通过子进程在后台启动命令
     #[cfg(not(mobile))]
     {
-        // CREATE_NO_WINDOW: 不创建控制台窗口
-        const CREATE_NO_WINDOW: u32 = 0x08000000;
         // DETACHED_PROCESS: 使进程在后台运行
         // const DETACHED_PROCESS: u32 = 0x00000008;
         let mut cmd = Command::new(&program);
@@ -108,7 +123,7 @@ fn run_command(program: String, args: Vec<String>) -> String {
                 pid.to_string() // 返回进程ID
             }
             Err(e) => {
-                println!("Failed to execute process: {}", e);
+                log::error!("Failed to execute process: {}", e);
                 format!("Error: {}", e) // 返回错误信息
             }
         };
@@ -161,7 +176,7 @@ fn desktop_exe_directory() -> String {
             "".to_string()
         }
         Err(e) => {
-            println!("failed to get current exe path: {e}");
+            log::error!("failed to get current exe path: {e}");
             "".to_string()
         }
     }
@@ -237,8 +252,8 @@ pub fn run() {
         let log_dir_created = std::fs::create_dir_all(&log_dir).is_ok();
 
         if !log_dir_created {
-            println!("Warning: Failed to create log directory at: {}", log_dir);
-            println!("Logs will only be output to console.");
+            log::warn!("Failed to create log directory at: {}", log_dir);
+            log::warn!("Logs will only be output to console.");
         }
 
         // 只有在日志目录创建成功时才启用文件日志
@@ -247,17 +262,7 @@ pub fn run() {
                 tauri_plugin_log::Builder::new()
                     .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
                     .level(log::LevelFilter::Info)
-                    .format(|out, message, record| {
-                        let date = Local::now().format("%Y-%m-%d %H:%M:%S");
-                        let target = record.target().split("@").next().unwrap_or(record.target());
-                        out.finish(format_args!(
-                            "{} {:<5} [{}]: {}",
-                            date,
-                            record.level(),
-                            target,
-                            message
-                        ))
-                    })
+                    .format(log_format)
                     .targets([
                         Target::new(TargetKind::Stdout),
                         Target::new(TargetKind::LogDir {
@@ -273,17 +278,7 @@ pub fn run() {
                 tauri_plugin_log::Builder::new()
                     .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
                     .level(log::LevelFilter::Info)
-                    .format(|out, message, record| {
-                        let date = Local::now().format("%Y-%m-%d %H:%M:%S");
-                        let target = record.target().split("@").next().unwrap_or(record.target());
-                        out.finish(format_args!(
-                            "{} {:<5} [{}]: {}",
-                            date,
-                            record.level(),
-                            target,
-                            message
-                        ))
-                    })
+                    .format(log_format)
                     .targets([
                         Target::new(TargetKind::Stdout),
                         Target::new(TargetKind::Webview),
@@ -300,17 +295,7 @@ pub fn run() {
             tauri_plugin_log::Builder::new()
                 .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
                 .level(log::LevelFilter::Info)
-                .format(|out, message, record| {
-                    let date = Local::now().format("%Y-%m-%d %H:%M:%S");
-                    let target = record.target().split("@").next().unwrap_or(record.target());
-                    out.finish(format_args!(
-                        "{} {:<5} [{}]: {}",
-                        date,
-                        record.level(),
-                        target,
-                        message
-                    ))
-                })
+                .format(log_format)
                 .targets([
                     Target::new(TargetKind::Stdout),
                     Target::new(TargetKind::LogDir {
