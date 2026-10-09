@@ -40,7 +40,7 @@ export const useLocaleStore = defineStore('locales', {
       // 初始语言：读取本地存储，默认简体中文
       currentLocale: {
         lang: getStorage('lang') || 'zh-CN',
-        elLocale: elLocaleMap[getStorage('lang') || 'zh-CN']
+        elLocale: elLocaleMap[(getStorage('lang') || 'zh-CN') as keyof typeof elLocaleMap]
       },
       // 多语言
       localeMap: [

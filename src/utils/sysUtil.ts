@@ -50,7 +50,7 @@ export const getLocale = async () => {
 }
 
 /** 延时指定毫秒（异步等待辅助） */
-export const sleep = (ms) => {
+export const sleep = (ms: number) => {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 

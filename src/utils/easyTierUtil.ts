@@ -12,9 +12,9 @@ import defaultData from '@/constants/defaultData'
 import { t } from '@/utils/i18nUtil'
 
 /** 解析 `easytier-cli node` 表格文本为键值对象（形如 │ key │ value │ 的行） */
-export const parseNodeInfo = (content) => {
+export const parseNodeInfo = (content: string) => {
   const regex = /^\s*│\s*([^│]+)\s*│\s*([^│]+)\s*│\s*$/gm
-  const result = {}
+  const result: Record<string, string> = {}
   let match
   while ((match = regex.exec(content)) !== null) {
     const key = match[1].trim()
@@ -26,7 +26,7 @@ export const parseNodeInfo = (content) => {
  * 解析 `easytier-cli peer` 表格文本为对象数组
  * 表头取自第 2 行；数据自第 4 行起隔行取值（中间为分隔线）；'-' 与空串归一为 null
  */
-export const parsePeerInfo = (content) => {
+export const parsePeerInfo = (content: string) => {
   // 将表格字符串分割成行
   const lines = content.split('\n')
 
@@ -34,7 +34,7 @@ export const parsePeerInfo = (content) => {
   const headers = lines[1]
     .split('│')
     .slice(1, -1)
-    .map((h) => h.trim())
+    .map((h: string) => h.trim())
 
   // 初始化结果数组
   const result: any[] = []
@@ -47,11 +47,11 @@ export const parsePeerInfo = (content) => {
     const values = lines[i]
       .split('│')
       .slice(1, -1)
-      .map((v) => v.trim())
+      .map((v: string) => v.trim())
 
     // 创建对象并添加到结果数组
     const obj: any = {}
-    headers.forEach((header, index) => {
+    headers.forEach((header: string, index: number) => {
       obj[header] = values[index] === '-' || values[index] === '' ? null : values[index]
     })
 
@@ -67,14 +67,14 @@ export const parsePeerInfo = (content) => {
  * 三种来源合并：public_ipv4 字段 > dest_addr（排除 mapped_addr）> "got ip list"；
  * 过滤私网/回环/链路本地地址，按来源优先级 → 出现次数 → 出现位置排序
  */
-export async function extractAllPublicIPs(logText) {
+export async function extractAllPublicIPs(logText: string) {
   // 私网IP判断函数
-  function isPrivateIP(ip) {
+  function isPrivateIP(ip: string) {
     const parts = ip.split('.')
     if (parts.length !== 4) return false
     return (
       parts[0] === '10' ||
-      (parts[0] === '172' && parts[1] >= 16 && parts[1] <= 31) ||
+      (parts[0] === '172' && Number(parts[1]) >= 16 && Number(parts[1]) <= 31) ||
       (parts[0] === '192' && parts[1] === '168') ||
       parts[0] === '127' || // 本地回环
       (parts[0] === '0' && parts[1] === '0' && parts[2] === '0') || // 全0地址
@@ -84,7 +84,7 @@ export async function extractAllPublicIPs(logText) {
   }
 
   // 按行分割日志
-  const lines = logText.split('\n').filter((line) => line.trim())
+  const lines = logText.split('\n').filter((line: string) => line.trim())
 
   // 获取 mapped_addr 中的IP（排除用）
   const mappedAddrMatch = logText.match(
@@ -95,7 +95,7 @@ export async function extractAllPublicIPs(logText) {
   // 收集所有候选IP，记录来源和出现次数
   const ipCandidates = new Map()
 
-  lines.forEach((line, lineIndex) => {
+  lines.forEach((line: string, lineIndex: number) => {
     // 策略1: 提取 public_ipv4
     const publicMatch = line.match(/public_ipv4:\s*Some\(([\d.]+)\)/)
     if (publicMatch) {
@@ -144,14 +144,14 @@ export async function extractAllPublicIPs(logText) {
   })
 
   // 策略3: 从 "got ip list" 中提取非私网IP
-  const gotIpListLines = lines.filter((line) => line.includes('got ip list'))
+  const gotIpListLines = lines.filter((line: string) => line.includes('got ip list'))
   if (gotIpListLines.length > 0) {
-    gotIpListLines.forEach((line, lineIndex) => {
+    gotIpListLines.forEach((line: string, lineIndex: number) => {
       const allIPs =
         line.match(
           /\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/g
         ) || []
-      allIPs.forEach((ip) => {
+      allIPs.forEach((ip: string) => {
         if (!isPrivateIP(ip)) {
           if (!ipCandidates.has(ip)) {
             ipCandidates.set(ip, {
@@ -187,8 +187,10 @@ export async function extractAllPublicIPs(logText) {
 
   result.sort((a, b) => {
     // 计算优先级分数
-    const getPriorityScore = (sources) => {
-      return Math.max(...sources.map((s) => sourcePriority[s] || 0))
+    const getPriorityScore = (sources: string[]) => {
+      return Math.max(
+        ...sources.map((s: string) => sourcePriority[s as keyof typeof sourcePriority] || 0)
+      )
     }
 
     const priorityCompare = getPriorityScore(b.sources) - getPriorityScore(a.sources)
@@ -211,7 +213,7 @@ export async function extractAllPublicIPs(logText) {
  * @param {number} linesToRead - 要读取的行数
  * @returns {string} 倒着读取的结果，按换行符分隔
  */
-export function readTextReverse(text, linesToRead) {
+export function readTextReverse(text: string, linesToRead: number) {
   // 参数校验
   if (typeof text !== 'string') {
     throw new Error('第一个参数必须是字符串')

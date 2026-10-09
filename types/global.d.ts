@@ -1,51 +1,17 @@
-import type { CSSProperties } from 'vue'
 declare global {
-  declare interface Fn<T = any> {
-    (...arg: T[]): T
-  }
+  type Recordable<T = any, K extends string = string> = Record<K, T>
 
-  declare type Nullable<T> = T | null
+  type LocaleType = 'zh-CN' | 'en'
 
-  declare type ElRef<T extends HTMLElement = HTMLDivElement> = Nullable<T>
+  type TimeoutHandle = ReturnType<typeof setTimeout>
 
-  declare type Recordable<T = any, K = string> = Record<K extends null | undefined ? string : K, T>
-
-  declare type RemoveReadonly<T> = {
-    -readonly [P in keyof T]: T[P]
-  }
-
-  declare type ComponentRef<T> = InstanceType<T>
-
-  declare type LocaleType = 'zh-CN' | 'en'
-
-  declare type TimeoutHandle = ReturnType<typeof setTimeout>
-  declare type IntervalHandle = ReturnType<typeof setInterval>
-
-  declare type ElementPlusInfoType = 'success' | 'info' | 'warning' | 'danger'
-
-  declare type LayoutType = 'classic' | 'topLeft' | 'top' | 'cutMenu'
-
-  declare interface ThemeTypes {
+  interface ThemeTypes {
     elColorPrimary?: string
-    leftMenuBorderColor?: string
-    leftMenuBgColor?: string
-    leftMenuBgLightColor?: string
-    leftMenuBgActiveColor?: string
-    leftMenuCollapseBgActiveColor?: string
-    leftMenuTextColor?: string
-    leftMenuTextActiveColor?: string
-    logoTitleTextColor?: string
-    logoBorderColor?: string
-    topHeaderBgColor?: string
-    topHeaderTextColor?: string
-    topHeaderHoverColor?: string
-    topToolBorderColor?: string
   }
 
-  declare interface ImportMetaEnv {
+  interface ImportMetaEnv {
     readonly VITE_NODE_ENV: string
     readonly VITE_APP_TITLE: string
-    readonly VITE_API_BASE_PATH: string
     readonly VITE_BASE_PATH: string
     readonly VITE_DROP_DEBUGGER: string
     readonly VITE_DROP_CONSOLE: string
@@ -53,10 +19,8 @@ declare global {
     readonly VITE_OUT_DIR: string
     readonly VITE_USE_BUNDLE_ANALYZER: string
     readonly VITE_USE_ALL_ELEMENT_PLUS_STYLE: string
-    readonly VITE_USE_MOCK: string
     readonly VITE_USE_CSS_SPLIT: string
-    readonly VITE_USE_ONLINE_ICON: string
-    readonly VITE_ICON_PREFIX: string
-    readonly VITE_HIDE_GLOBAL_SETTING: string
   }
 }
+
+export {}

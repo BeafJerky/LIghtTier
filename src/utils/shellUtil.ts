@@ -517,14 +517,14 @@ export const getRunningProcesses = async (
       .then((res) => {
         res = JSON.parse(res || '[]')
         res = Array.isArray(res) ? res : []
-        const result = res.filter((r) => !r.name.includes('powershell.exe'))
+        const result = res.filter((r: any) => !r.name.includes('powershell.exe'))
         if (result.length === 0) {
           resolve(processInfo)
           return
         }
         if (platform === 'windows') {
           // 解析JSON 输出
-          result.forEach((p) => {
+          result.forEach((p: any) => {
             if (p.commandLine && p.commandLine.includes(programName)) {
               const process = {
                 name: p.name,

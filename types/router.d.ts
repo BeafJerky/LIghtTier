@@ -22,7 +22,7 @@ type Component<T = any> =
   | (() => Promise<T>)
 
 declare global {
-  declare interface AppRouteRecordRaw extends Omit<RouteRecordRaw, 'meta' | 'children'> {
+  interface AppRouteRecordRaw extends Omit<RouteRecordRaw, 'meta' | 'children'> {
     name: string
     meta: RouteMetaCustom
     component?: Component | string

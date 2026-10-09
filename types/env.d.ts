@@ -12,3 +12,5 @@ declare global {
     readonly env: ImportMetaEnv
   }
 }
+
+export {}

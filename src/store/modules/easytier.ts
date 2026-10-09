@@ -36,13 +36,13 @@ export const useEasyTierStore = defineStore(
     const configPath = ref('resource')
     const configList = ref<RunningItem[]>([])
     const configWebList = ref<RunningWebItem[]>([])
-    const fileList = ref([])
+    const fileList = ref<string[]>([])
     const runningList = ref<RunningItem[]>([])
     const lastRunConfig = ref<RunningItem>()
     const lastSelectedConfig = ref<RunningItem>()
-    const allConfigOptions = ref([])
+    const allConfigOptions = ref<any[]>([])
     // 带有文件后缀
-    const fileListNoSuffix = ref([])
+    const fileListNoSuffix = ref<string[]>([])
     const stopLoop = ref(false)
     const stopSetRoute = ref(false)
     // ===== 远端数据缓存与页面偏好 =====
@@ -110,16 +110,16 @@ export const useEasyTierStore = defineStore(
     const setStartQueue = (queue: string[]) => {
       startQueue.value = queue
     }
-    const setConfigList = (list) => {
+    const setConfigList = (list: RunningItem[]) => {
       configList.value = list
     }
-    const setConfigWebList = (list) => {
+    const setConfigWebList = (list: RunningWebItem[]) => {
       configWebList.value = list
     }
-    const setFileList = (list) => {
+    const setFileList = (list: string[]) => {
       fileList.value = list
     }
-    const setFileListNoSuffix = (list) => {
+    const setFileListNoSuffix = (list: string[]) => {
       fileListNoSuffix.value = list
     }
     const loadRunningList = () => {
@@ -168,16 +168,16 @@ export const useEasyTierStore = defineStore(
       }
       return ''
     }
-    const setAllConfigOptions = (list) => {
+    const setAllConfigOptions = (list: any[]) => {
       allConfigOptions.value = list
     }
-    const setStopLoop = (flag) => {
+    const setStopLoop = (flag: boolean) => {
       stopLoop.value = flag
     }
-    const setP2pNotify = (flag) => {
+    const setP2pNotify = (flag: boolean) => {
       p2pNotify.value = flag
     }
-    const setP2pNotifySetting = (flag) => {
+    const setP2pNotifySetting = (flag: boolean) => {
       p2pNotifySetting.value = flag
     }
     const setMonitorSummary = (configName: string, summary: MonitorSummary) => {
@@ -188,19 +188,19 @@ export const useEasyTierStore = defineStore(
       delete next[configName]
       monitorSummaryMap.value = next
     }
-    const setAutoRunNetworkSetting = (flag) => {
+    const setAutoRunNetworkSetting = (flag: boolean) => {
       autoRunNetworkSetting.value = flag
     }
-    const setAutoRunConfigName = (name) => {
+    const setAutoRunConfigName = (name: string) => {
       autoRunConfigName.value = name
     }
-    const setDefaultFormData = (data) => {
+    const setDefaultFormData = (data: any) => {
       defaultFormData.value = data
     }
-    const setErrRunNotify = (data) => {
+    const setErrRunNotify = (data: boolean) => {
       errRunNotify.value = data
     }
-    const setOs = (data) => {
+    const setOs = (data: string) => {
       os.value = data
     }
     // 设置配置根路径：显式传参优先，否则取 Tauri resource 目录（安装目录内的资源）
@@ -384,7 +384,7 @@ export const useEasyTierStore = defineStore(
       return stunServerList.value
     }
 
-    const setSelectedColumns = (list) => {
+    const setSelectedColumns = (list: string[]) => {
       selectedColumns.value = list
     }
     const setDefaultServiceInstallMethod = (method: 'nssm' | 'official') => {
