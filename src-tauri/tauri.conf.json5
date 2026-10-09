@@ -73,12 +73,9 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    // 应用程序资源文件
-    // resource/core/*：内置核心压缩包，首次安装免下载（运行时解压到 resource/core 下）
+    // 应用程序资源文件（resource/* 递归匹配所有子目录，含 core/ 与 themes/）
     "resources": [
-      "resource/*",
-      "resource/themes/*",
-      "resource/core/*"
+      "resource/*"
     ]
   },
   // 插件配置

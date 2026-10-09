@@ -47,12 +47,12 @@ custom-protocol = ["tauri/custom-protocol"]
 # [profile.dev]
 # incremental = true # Compile your binary in smaller steps.
 
-# [profile.release]
-# codegen-units = 1 # Allows LLVM to perform better optimization.
-# lto = true # Enables link-time-optimizations.
-# opt-level = "s" # Prioritizes small binary size. Use `3` if you prefer speed.
-# panic = "abort" # Higher performance by disabling panic handlers.
-# strip = true # Ensures debug symbols are removed.
+[profile.release]
+codegen-units = 1 # Allows LLVM to perform better optimization.
+lto = true # Enables link-time-optimizations.
+opt-level = "s" # Prioritizes small binary size. Use `3` if you prefer speed.
+panic = "abort" # Higher performance by disabling panic handlers.
+strip = true # Ensures debug symbols are removed.
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-single-instance = "2.4.1"
@@ -72,8 +72,13 @@ uuid = { version = "1", features = ["v4"] }
 humansize = "2.1.3"
 
 [patch.crates-io]
-# Relax proc-macro-crate v2.0.2's `toml_datetime = "=0.6.3"` pin (pulled in via the
-# gtk/glib Linux dependency chain) so it can coexist with easytier's `toml ^0.8.12`
-# (which requires toml_datetime ^0.6.5). Cargo resolves one version per 0.6.x semver
+# proc-macro-crate v2.0.2 pins `toml_datetime = "=0.6.3"` (pulled in via the gtk/glib
+# Linux dependency chain), which conflicts with easytier's `toml ^0.8.12`
+# (requiring toml_datetime ^0.6.5). Cargo resolves one version per 0.6.x semver
 # series across all platforms, including Windows/Android builds.
+#
+# The vendor copy at vendor/proc-macro-crate relaxes the pin to `toml_datetime ^0.6`.
+# Track upstream fix: https://github.com/Boshen/proc-macro-crate/issues/18
+# TODO: Remove this patch once proc-macro-crate >= v2.1.0 is published with the fix,
+#       then delete the vendor/proc-macro-crate directory.
 proc-macro-crate = { path = "vendor/proc-macro-crate" }

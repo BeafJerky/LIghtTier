@@ -26,12 +26,8 @@
     "core:webview:allow-webview-close",
     "core:window:allow-set-skip-taskbar",
     "window-state:default",
-    "window-state:allow-save-window-state",
-    "window-state:allow-restore-state",
     "fs:default",
-    "fs:read-all",
     "fs:read-files",
-    "fs:write-all",
     "fs:write-files",
     "fs:scope-log",
     "fs:allow-exists",
@@ -64,10 +60,8 @@
     "dialog:default",
     "dialog:allow-open",
     "shell:default",
-    "shell:allow-execute",
     "shell:allow-kill",
     "shell:allow-open",
-    "shell:allow-spawn",
     "shell:allow-stdin-write",
     {
       "identifier": "fs:write-all",
@@ -120,18 +114,8 @@
         },
         {
           "args": true,
-          "cmd": "runas",
-          "name": "runas"
-        },
-        {
-          "args": true,
           "cmd": "sudo",
           "name": "sudo"
-        },
-        {
-          "args": true,
-          "cmd": "netsh",
-          "name": "netsh"
         },
         {
           "args": true,
@@ -155,18 +139,13 @@
         },
         {
           "args": true,
-          "cmd": "ps",
-          "name": "ps"
-        },
-        {
-          "args": true,
           "cmd": "route",
           "name": "route"
         },
         {
           "args": true,
-          "cmd": "mstsc",
-          "name": "mstsc"
+          "cmd": "sh",
+          "name": "sh"
         }
       ]
     },
@@ -195,11 +174,6 @@
         },
         {
           "args": true,
-          "cmd": "runas",
-          "name": "runas"
-        },
-        {
-          "args": true,
           "cmd": "sudo",
           "name": "sudo"
         },
@@ -207,11 +181,6 @@
           "args": true,
           "cmd": "nohup",
           "name": "nohup"
-        },
-        {
-          "args": true,
-          "cmd": "mstsc",
-          "name": "mstsc"
         }
       ]
     },
