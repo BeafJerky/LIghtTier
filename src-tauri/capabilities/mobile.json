@@ -27,6 +27,6 @@
     "dialog:allow-open",
     "dialog:allow-save",
     "vpnservice:default",
-    "vpnservice:allow-register_listener"
+    "vpnservice:allow-register-listener"
   ]
 }
