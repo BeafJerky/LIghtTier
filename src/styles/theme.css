@@ -73,6 +73,8 @@
   --theme-font-body:
     'Sora', 'Segoe UI Variable Text', 'Segoe UI', Roboto, 'PingFang SC', 'HarmonyOS Sans SC',
     'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif;
+  /* 等宽字体（监控页 RPC 地址等等宽展示场景） */
+  --theme-font-mono: ui-monospace, 'Cascadia Mono', Consolas, 'Courier New', monospace;
 
   /* ===== 动效 ===== */
   --theme-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);

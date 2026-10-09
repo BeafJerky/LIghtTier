@@ -399,7 +399,7 @@ onBeforeUnmount(() => {
 }
 
 .nl-win-close:hover {
-  color: var(--theme-text-white);
+  color: var(--theme-text-on-accent);
   background: var(--theme-accent-primary);
 }
 
@@ -738,7 +738,7 @@ onBeforeUnmount(() => {
   position: fixed;
   inset: 28px 0 0;
   z-index: 90;
-  background: rgb(0 0 0 / 35%);
+  background: var(--el-overlay-color, rgb(0 0 0 / 35%));
 }
 
 /* Android：无窗口拖拽条（不渲染），抽屉/遮罩顶部对齐安全区（状态栏下方） */

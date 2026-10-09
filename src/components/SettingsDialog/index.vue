@@ -1387,7 +1387,7 @@ const handleInstallCore = async () => {
   left: 2px;
   width: 16px;
   height: 16px;
-  background: #fff;
+  background: var(--theme-text-white, #fff);
   border-radius: 50%;
   content: '';
   box-shadow: 0 1px 3px rgb(0 0 0 / 10%);
@@ -1686,7 +1686,7 @@ const handleInstallCore = async () => {
   font-family: var(--theme-font-display, 'Quicksand', sans-serif);
   font-size: 20px;
   font-weight: 700;
-  color: #fff;
+  color: var(--theme-text-on-accent, #fff);
   background: linear-gradient(
     135deg,
     var(--theme-accent-primary, #e8a0a0),

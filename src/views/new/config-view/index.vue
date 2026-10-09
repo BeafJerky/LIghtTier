@@ -1679,7 +1679,7 @@ const handleUninstallService = async () => {
   font-family: var(--theme-font-body);
   font-size: 12px;
   font-weight: 500;
-  color: #fff;
+  color: var(--theme-text-on-accent, #fff);
   cursor: pointer;
   background: var(--theme-accent-primary);
   border: none;
@@ -1765,7 +1765,7 @@ const handleUninstallService = async () => {
 }
 
 .nw-btn-cfm-ok {
-  color: var(--theme-text-white, #fff);
+  color: var(--theme-text-on-accent, #fff);
   background: var(--theme-accent-primary);
 }
 

@@ -255,7 +255,7 @@ onUnmounted(() => {
   left: 2px;
   width: 15px;
   height: 15px;
-  background: #fff;
+  background: var(--theme-text-white, #fff);
   border-radius: 50%;
   content: '';
   box-shadow: 0 1px 3px rgb(0 0 0 / 10%);
