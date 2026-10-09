@@ -30,12 +30,7 @@ export default ({ command, mode }: ConfigEnv): UserConfig => {
   return {
     base: env.VITE_BASE_PATH,
     plugins: [
-      Vue({
-        script: {
-          // 开启defineModel
-          defineModel: true
-        }
-      }),
+      Vue(),
       VueJsx(),
       ServerUrlCopy(),
       isBuild ? undefined : progress(),
@@ -62,7 +57,6 @@ export default ({ command, mode }: ConfigEnv): UserConfig => {
             ]
           })
         : undefined,
-      undefined,
       VueI18nPlugin({
         runtimeOnly: true,
         compositionOnly: true,
@@ -84,7 +78,6 @@ export default ({ command, mode }: ConfigEnv): UserConfig => {
       }
     },
     resolve: {
-      extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.less', '.css'],
       alias: [
         {
           find: 'vue-i18n',
@@ -108,7 +101,6 @@ export default ({ command, mode }: ConfigEnv): UserConfig => {
       // 使用 esbuild 作为压缩器，比 terser 快 20-40 倍
       minify: 'esbuild',
       reportCompressedSize: false, // 禁用 gzip 压缩大小报告，提升打包速度
-      chunkSizeWarningLimit: 2000, // 调整 chunk 大小警告的限制
       rollupOptions: {
         maxParallelFileOps: 3,
         plugins: env.VITE_USE_BUNDLE_ANALYZER === 'true' ? [visualizer()] : undefined,
@@ -144,17 +136,6 @@ export default ({ command, mode }: ConfigEnv): UserConfig => {
     server: {
       port: 4000,
       host: '0.0.0.0',
-      proxy: {
-        // 选项写法
-        '/api': {
-          target: 'http://127.0.0.1:8000',
-          changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, '')
-        }
-      },
-      hmr: {
-        overlay: false
-      },
       watch: {
         // tell vite to ignore watching `src-tauri`
         ignored: ['**/src-tauri/**']

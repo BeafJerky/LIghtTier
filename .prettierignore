@@ -2,8 +2,7 @@
 /dist/
 /dist*
 /public/*
-/docs/*
+/doc/*
 /src/types/env.d.ts
-/docs/**/*
-/plop/**/*
+/doc/**/*
 CHANGELOG

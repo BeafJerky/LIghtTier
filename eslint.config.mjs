@@ -7,16 +7,19 @@ import tseslint from 'typescript-eslint'
 import vueParser from 'vue-eslint-parser'
 import prettier from 'eslint-plugin-prettier'
 
-export default tseslint.config({
-  ignores: [
-    'node_modules',
-    'prettier.config.cjs',
-    'dist',
-    'src-tauri',
-    'target',
-    'auto-imports.d.ts',
-    'components.d.ts'
-  ],
+export default tseslint.config(
+  {
+    ignores: [
+      'node_modules',
+      'prettier.config.cjs',
+      'dist',
+      'src-tauri',
+      'target',
+      'auto-imports.d.ts',
+      'components.d.ts'
+    ]
+  },
+  {
   files: ['src/**/*.ts', 'src/**/*.tsx', 'src/**/*.vue'],
   // tseslint.config添加了extends扁平函数，直接用。否则是eslint9.0版本是没有extends的
   extends: [
@@ -40,34 +43,29 @@ export default tseslint.config({
   },
   rules: {
     'prettier/prettier': 'error',
-    'no-useless-escape': 0,
-    'no-undef': 0,
-    'vue/no-setup-props-destructure': 0,
-    'vue/no-reserved-component-names': 0,
-    '@typescript-eslint/ban-ts-ignore': 0,
-    '@typescript-eslint/explicit-function-return-type': 0,
-    '@typescript-eslint/no-explicit-any': 0,
-    '@typescript-eslint/no-var-requires': 0,
-    '@typescript-eslint/no-empty-function': 0,
-    'vue/custom-event-name-casing': 0,
-    'no-use-before-define': 0,
-    '@typescript-eslint/no-use-before-define': 0,
-    '@typescript-eslint/ban-ts-comment': 0,
-    '@typescript-eslint/ban-types': 0,
-    '@typescript-eslint/no-non-null-assertion': 0,
-    '@typescript-eslint/explicit-module-boundary-types': 0,
-    '@typescript-eslint/no-unused-vars': 0,
-    'no-unused-vars': 0,
-    'space-before-function-paren': 0,
-    'vue/attributes-order': 0,
-    'vue/one-component-per-file': 0,
-    'vue/html-closing-bracket-newline': 0,
-    'vue/max-attributes-per-line': 0,
-    'vue/multiline-html-element-content-newline': 0,
-    'vue/singleline-html-element-content-newline': 0,
-    'vue/attribute-hyphenation': 0,
-    'vue/require-default-prop': 0,
-    'vue/require-explicit-emits': 0,
+    'no-useless-escape': 0, // TODO: evaluate whether to re-enable
+    'no-undef': 0, // TODO: evaluate whether to re-enable
+    'vue/no-reserved-component-names': 0, // TODO: evaluate whether to re-enable
+    '@typescript-eslint/explicit-function-return-type': 0, // TODO: evaluate whether to re-enable
+    '@typescript-eslint/no-explicit-any': 0, // TODO: evaluate whether to re-enable
+    '@typescript-eslint/no-empty-function': 0, // TODO: evaluate whether to re-enable
+    'vue/custom-event-name-casing': 0, // TODO: evaluate whether to re-enable
+    'no-use-before-define': 0, // TODO: evaluate whether to re-enable
+    '@typescript-eslint/no-use-before-define': 0, // TODO: evaluate whether to re-enable
+    '@typescript-eslint/ban-ts-comment': 0, // TODO: evaluate whether to re-enable
+    '@typescript-eslint/no-non-null-assertion': 0, // TODO: evaluate whether to re-enable
+    '@typescript-eslint/explicit-module-boundary-types': 0, // TODO: evaluate whether to re-enable
+    '@typescript-eslint/no-unused-vars': 0, // TODO: evaluate whether to re-enable
+    'no-unused-vars': 0, // TODO: evaluate whether to re-enable
+    'space-before-function-paren': 0, // TODO: evaluate whether to re-enable
+    'vue/attributes-order': 0, // TODO: evaluate whether to re-enable
+    'vue/one-component-per-file': 0, // TODO: evaluate whether to re-enable
+    'vue/html-closing-bracket-newline': 0, // TODO: evaluate whether to re-enable
+    'vue/max-attributes-per-line': 0, // TODO: evaluate whether to re-enable
+    'vue/multiline-html-element-content-newline': 0, // TODO: evaluate whether to re-enable
+    'vue/singleline-html-element-content-newline': 0, // TODO: evaluate whether to re-enable
+    'vue/attribute-hyphenation': 0, // TODO: evaluate whether to re-enable
+    'vue/require-default-prop': 0, // TODO: evaluate whether to re-enable
     'vue/html-self-closing': [
       1,
       {
@@ -80,9 +78,9 @@ export default tseslint.config({
         math: 'always'
       }
     ],
-    'vue/multi-word-component-names': 0,
-    'vue/no-v-html': 0,
-    'vue/require-toggle-inside-transition': 0,
-    'no-async-promise-executor': 0
+    'vue/multi-word-component-names': 0, // TODO: evaluate whether to re-enable
+    'vue/no-v-html': 0, // TODO: evaluate whether to re-enable
+    'no-async-promise-executor': 0 // TODO: evaluate whether to re-enable
   }
-})
+  }
+)

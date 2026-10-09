@@ -1,2 +1,2 @@
-npm run ts:check
-npm run lint:lint-staged
+pnpm run ts:check
+pnpm run lint:lint-staged

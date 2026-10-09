@@ -42,6 +42,7 @@ Thumbs.db
 *.iml
 
 # ----- AI 工具（指导文档与个人缓存统一不进仓库）-----
+.qoder-credits/
 .claude
 .ai
 AGENTS.md
