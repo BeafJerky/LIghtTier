@@ -2,9 +2,10 @@
 # 使用环境变量 + 默认值模式，支持不同开发者机器
 # 用法: 在各构建脚本中 . "$PSScriptRoot\android-env.ps1"
 
-$script:ANDROID_NDK_HOME = $env:ANDROID_NDK_HOME ?? "D:\develop\Android\ndk\29.0.13846066"
-$script:ANDROID_HOME     = $env:ANDROID_HOME     ?? "D:\develop\Android"
-$script:JAVA_HOME        = $env:JAVA_HOME         ?? "C:\Program Files\Java\jdk-17"
+# 注意: 构建脚本经 Windows PowerShell 5.1 调用（见 lt-repack-all.ps1），不可使用 pwsh 7 专有的 ?? 运算符
+$script:ANDROID_NDK_HOME = if ($env:ANDROID_NDK_HOME) { $env:ANDROID_NDK_HOME } else { "D:\develop\Android\ndk\29.0.13846066" }
+$script:ANDROID_HOME     = if ($env:ANDROID_HOME)     { $env:ANDROID_HOME }     else { "D:\develop\Android" }
+$script:JAVA_HOME        = if ($env:JAVA_HOME)        { $env:JAVA_HOME }        else { "C:\Program Files\Java\jdk-17" }
 
 $script:NDK_BIN = "$script:ANDROID_NDK_HOME\toolchains\llvm\prebuilt\windows-x86_64\bin"
 
