@@ -16,11 +16,11 @@ export const NSSM_NAME = 'nssm'
 export const CONFIG_FILE_NAME = 'data.json'
 export const USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36'
-export const COOKIE_VALUE = '83077fe7-9171-43f9-906a-f7b95096db66'
 // export const MONITOR_LIST = 'https://easytier.linch.eu.org/api/getMonitorList'
 export const MONITOR_LIST = 'https://uptime.easytier.cn/api/nodes?page=1&per_page=50'
 export const CORE_INFO_API = 'https://api.github.com/repos/EasyTier/EasyTier/releases'
 // LightTier 仓库主页（“关于”页链接）与发布地址（“检查更新”读取 releases）
+// 注意：仓库名中 'I' 为大写（LIghtTier），GitHub URL 大小写不敏感，但实际仓库名如此
 export const MANAGER_REPO_HOME = 'https://github.com/BeafJerky/LIghtTier'
 export const MANAGER_REPO_URL = `${MANAGER_REPO_HOME}/releases`
 export const MANAGER_INFO_API = 'https://api.github.com/repos/BeafJerky/LIghtTier/releases'
