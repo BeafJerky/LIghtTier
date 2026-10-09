@@ -14,11 +14,6 @@ import app.tauri.plugin.Plugin
 import android.webkit.WebView
 
 @InvokeArg
-class PingArgs {
-    var value: String? = null
-}
-
-@InvokeArg
 class StartVpnArgs {
     var ipv4Addr: String? = null
     var routes: Array<String> = emptyArray()
@@ -29,23 +24,12 @@ class StartVpnArgs {
 
 @TauriPlugin
 class VpnServicePlugin(private val activity: Activity) : Plugin(activity) {
-    private val implementation = Example()
-
     override fun load(webView: WebView) {
         println("load vpn service plugin")
         TauriVpnService.triggerCallback = { event, data ->
             println("vpn: triggerCallback $event $data")
             trigger(event, data)
         }
-    }
-
-    @Command
-    fun ping(invoke: Invoke) {
-        val args = invoke.parseArgs(PingArgs::class.java)
-
-        val ret = JSObject()
-        ret.put("value", implementation.pong(args.value ?: "default value :("))
-        invoke.resolve(ret)
     }
 
     @Command

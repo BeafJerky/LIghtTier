@@ -18,11 +18,11 @@
   ],
   "scripts": {
     "build": "rollup -c",
-    "prepublishOnly": "yarn build",
-    "pretest": "yarn build"
+    "prepublishOnly": "pnpm build",
+    "pretest": "pnpm build"
   },
   "dependencies": {
-    "@tauri-apps/api": "2.0.0-rc.0"
+    "@tauri-apps/api": "^2.0.0"
   },
   "devDependencies": {
     "@rollup/plugin-typescript": "^11.1.6",

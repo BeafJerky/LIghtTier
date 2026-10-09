@@ -4,7 +4,6 @@ Default permissions for the plugin
 
 #### This default permission set includes the following:
 
-- `allow-ping`
 - `allow-prepare-vpn`
 - `allow-start-vpn`
 - `allow-stop-vpn`
@@ -47,32 +46,6 @@ Denies the get_vpn_status command without any pre-configured scope.
 <tr>
 <td>
 
-`vpnservice:allow-ping`
-
-</td>
-<td>
-
-Enables the ping command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`vpnservice:deny-ping`
-
-</td>
-<td>
-
-Denies the ping command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
 `vpnservice:allow-prepare-vpn`
 
 </td>
@@ -92,32 +65,6 @@ Enables the prepare_vpn command without any pre-configured scope.
 <td>
 
 Denies the prepare_vpn command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`vpnservice:allow-registerListener`
-
-</td>
-<td>
-
-Enables the registerListener command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`vpnservice:deny-registerListener`
-
-</td>
-<td>
-
-Denies the registerListener command without any pre-configured scope.
 
 </td>
 </tr>

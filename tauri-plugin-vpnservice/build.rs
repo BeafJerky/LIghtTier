@@ -1,10 +1,9 @@
 const COMMANDS: &[&str] = &[
-    "ping",
     "prepare_vpn",
     "start_vpn",
     "stop_vpn",
     "get_vpn_status",
-    "registerListener",
+    "register_listener",
 ];
 
 fn main() {
