@@ -23,8 +23,13 @@ $env:AR_aarch64_linux_android  = "$script:NDK_BIN\llvm-ar.exe"
 $env:LIBCLANG_PATH = $script:NDK_BIN
 
 # --- bindgen (Windows 反斜杠会被 shlex 当转义符，sysroot 必须用正斜杠) ---
-$sysroot = "$script:ANDROID_NDK_HOME/toolchains/llvm/prebuilt/windows-x86_64/sysroot" -replace '\\', '/'
-$clangArgs = "--sysroot=$sysroot --target=aarch64-linux-android24"
+$llvmPrebuilt = "$script:ANDROID_NDK_HOME\toolchains\llvm\prebuilt\windows-x86_64"
+$sysroot = "$llvmPrebuilt/sysroot" -replace '\\', '/'
+# clang 内置头(stddef.h/stdint.h 等)位于资源目录 lib/clang/<ver>/include；
+# libclang 交叉编译时不会自动加入该目录，bindgen 会因找不到 stddef.h 而失败，需显式 -isystem
+$clangResDir = (Get-ChildItem "$llvmPrebuilt\lib\clang" -Directory -ErrorAction SilentlyContinue | Select-Object -First 1).FullName
+$clangResInclude = "$clangResDir/include" -replace '\\', '/'
+$clangArgs = "--sysroot=$sysroot --target=aarch64-linux-android24 -isystem $clangResInclude"
 ${env:BINDGEN_EXTRA_CLANG_ARGS_aarch64-linux-android} = $clangArgs
 ${env:BINDGEN_EXTRA_CLANG_ARGS_aarch64_linux_android} = $clangArgs
 
